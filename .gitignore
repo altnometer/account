@@ -1,0 +1,16 @@
+# ignore all
+# *
+
+# unignore files with extension
+# !*.*
+
+# unignore all directories
+# !*/
+# bolt db files
+*.db
+
+# govendor dir
+vendor/
+
+# ignore bin/ dir
+bin/
