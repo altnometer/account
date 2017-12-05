@@ -1,7 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"flag"
+
+	"github.com/altnometer/account/service"
+)
 
 func main() {
-	fmt.Println("Drafted cmd layout!")
+	port := flag.String("port", "8080", "server port")
+	flag.Parse()
+	service.StartWebServer(*port)
 }
