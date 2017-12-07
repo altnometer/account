@@ -47,7 +47,7 @@ var _ = Describe("WithDB", func() {
 			Expect(*mdb).To(Equal(mDB))
 		})
 	})
-	Context("when a wrapped handler gets db client in context", func() {
+	Context("handler receives db client in context", func() {
 		var (
 			name string
 			id   []byte
