@@ -62,12 +62,12 @@ var _ = Describe("WithDB", func() {
 					db, ok := context.GetOk(r, "db")
 					Expect(ok).To(Equal(true))
 					mdb, ok := (db).(*mocks.BoltClient)
-					mdb.GetCall.Receives.Name = name
 					mdb.GetCall.Returns.ID = id
 					mdb.GetCall.Returns.Error = nil
+					_, _ = mdb.Get(name)
 
-					mdb.SetCall.Receives.Name = name
 					mdb.SetCall.Returns.Error = nil
+					_ = mdb.Set(name)
 				}
 				return http.HandlerFunc(fn)
 			}
