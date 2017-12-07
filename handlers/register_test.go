@@ -13,7 +13,7 @@ import (
 
 var _ = Describe("Register", func() {
 	var (
-		w httptest.ResponseRecorder
+		w *httptest.ResponseRecorder
 		r *http.Request
 		f *url.Values
 		h *handlers.Register

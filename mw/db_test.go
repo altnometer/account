@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("WithDB", func() {
 	var (
-		w     httptest.ResponseRecorder
+		w     *httptest.ResponseRecorder
 		r     *http.Request
 		mDB   mocks.BoltClient
 		mHand func() http.Handler // mock handler
@@ -47,5 +47,4 @@ var _ = Describe("WithDB", func() {
 			Expect(*mdb).To(Equal(mDB))
 		})
 	})
-
 })
