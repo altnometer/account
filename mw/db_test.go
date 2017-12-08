@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/altnometer/account/dbclient"
 	"github.com/altnometer/account/mocks"
 	"github.com/altnometer/account/mw"
 
@@ -16,16 +17,18 @@ var _ = Describe("WithDB", func() {
 	var (
 		w     *httptest.ResponseRecorder
 		r     *http.Request
-		mDB   mocks.BoltClient
-		mHand func() http.Handler // mock handler
 		h     http.Handler
+		iDB   dbclient.IBoltClient
+		m     mocks.BoltClient
+		mHand func() http.Handler // mock handler
 	)
 	Context("when wraps an http.Handler", func() {
 		BeforeEach(func() {
-			mDB = mocks.BoltClient{}
-			mDB.GetCall.Receives.Name = "username"
-			mDB.GetCall.Returns.ID = []byte("12345")
-			mDB.GetCall.Returns.Error = nil
+			m = mocks.BoltClient{}
+			m.GetCall.Receives.Name = "username"
+			m.GetCall.Returns.ID = []byte("12345")
+			m.GetCall.Returns.Error = nil
+			iDB = &m
 			w = httptest.NewRecorder()
 			mHand = func() http.Handler {
 				fn := func(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +39,7 @@ var _ = Describe("WithDB", func() {
 				}
 				return http.HandlerFunc(fn)
 			}
-			h = mw.WithDB(&mDB, mHand())
+			h = mw.WithDB(iDB, mHand())
 		})
 		It("passes a db client in context", func() {
 			h.ServeHTTP(w, r)
@@ -44,7 +47,7 @@ var _ = Describe("WithDB", func() {
 			Expect(ok).To(Equal(true))
 			mdb, ok := (db).(*mocks.BoltClient)
 			Expect(ok).To(Equal(true))
-			Expect(*mdb).To(Equal(mDB))
+			Expect(*mdb).To(Equal(m))
 		})
 	})
 	Context("handler receives db client in context", func() {
@@ -53,7 +56,8 @@ var _ = Describe("WithDB", func() {
 			id   []byte
 		)
 		BeforeEach(func() {
-			mDB = mocks.BoltClient{}
+			m = mocks.BoltClient{}
+			iDB = &m
 			name = "username"
 			id = []byte("12345")
 			w = httptest.NewRecorder()
@@ -71,7 +75,7 @@ var _ = Describe("WithDB", func() {
 				}
 				return http.HandlerFunc(fn)
 			}
-			h = mw.WithDB(&mDB, mHand())
+			h = mw.WithDB(iDB, mHand())
 		})
 		It("it can use its methods", func() {
 			h.ServeHTTP(w, r)
