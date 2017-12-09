@@ -33,15 +33,15 @@ var _ = Describe("Register", func() {
 		h = &handlers.Register{RedirectURL: "/", Code: 302}
 		f = &url.Values{}
 		uid = []byte("12345")
+		m := mocks.BoltClient{}
+		m.GetCall.Returns.ID = uid
+		m.GetCall.Returns.Error = nil
+		iDB = &m
+		name = "unique_name"
+		pwd = "secret_password"
 	})
 	Context("with valid submitted user details", func() {
 		BeforeEach(func() {
-			m := mocks.BoltClient{}
-			m.GetCall.Returns.ID = uid
-			m.GetCall.Returns.Error = nil
-			iDB = &m
-			name = "unique_name"
-			pwd = "secret_password"
 			f.Add("name", name)
 			f.Add("password", pwd)
 			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
@@ -71,21 +71,59 @@ var _ = Describe("Register", func() {
 		})
 	})
 	Context("with missing username", func() {
-		It("should return a missing username error and 400 status code", func() {
-			// wh.ServeHTTP(w, r)
-			// Expect(w.Code).To(Equal(h.Code))
+		BeforeEach(func() {
+			f.Add("name", "")
+			f.Add("password", pwd)
+			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
+			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			wh = mw.WithDB(iDB, h)
+			wh.ServeHTTP(w, r)
+		})
+		It("should return a 400 status code", func() {
+			Expect(w.Code).To(Equal(400))
+		})
+		It("should return a missing username error", func() {
+			Expect(w.Body.String()).To(Equal("missing username\n"))
 		})
 	})
 	Context("with missing password", func() {
-		It("should return a missing password error and 400 status code", func() {
+		BeforeEach(func() {
+			f.Add("name", name)
+			f.Add("password", "")
+			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
+			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			wh = mw.WithDB(iDB, h)
+			wh.ServeHTTP(w, r)
+		})
+		It("should return a 400 status code", func() {
+			Expect(w.Code).To(Equal(400))
+		})
+		It("should return a missing password error", func() {
+			Expect(w.Body.String()).To(Equal("missing password\n"))
 		})
 	})
 	Context("with missing username and password ", func() {
-		It("should return a missing username error and 400 status code", func() {
+		BeforeEach(func() {
+			f.Add("name", "")
+			f.Add("password", "")
+			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
+			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			wh = mw.WithDB(iDB, h)
+			wh.ServeHTTP(w, r)
+		})
+		It("should return a 400 status code", func() {
+			Expect(w.Code).To(Equal(400))
+		})
+		It("should return a missing username error", func() {
+			Expect(w.Body.String()).To(Equal("missing username\n"))
 		})
 	})
 	Context("when username already exist", func() {
 		It("should return a username exist error and 400 status code", func() {
+			Expect(w.Code).To(Equal(400))
+		})
+		It("should return a username exist error", func() {
+			Expect(w.Body.String()).To(Equal("username exist\n"))
 		})
 	})
 
