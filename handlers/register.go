@@ -18,8 +18,7 @@ type Register struct {
 // Register handles an HTTP request to register a user.
 func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if code, err := saveUser(r); err != nil {
-		w.WriteHeader(code)
-		w.Write([]byte(err.Error()))
+		http.Error(w, err.Error(), code)
 		return
 	}
 	http.Redirect(w, r, reg.RedirectURL, reg.Code)
@@ -31,10 +30,10 @@ func saveUser(r *http.Request) (int, error) {
 		pwd  string
 	)
 	if name = r.PostFormValue("name"); name == "" {
-		return 403, errors.New("missing arg name")
+		return 400, errors.New("missing username")
 	}
 	if pwd = r.PostFormValue("password"); pwd == "" {
-		return 403, errors.New("missing arg password")
+		return 400, errors.New("missing password")
 	}
 	db, ok := context.GetOk(r, "db")
 	if !ok {
