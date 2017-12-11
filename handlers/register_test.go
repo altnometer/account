@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -23,6 +24,7 @@ var _ = Describe("Register", func() {
 		h   *handlers.Register
 		iDB dbclient.IBoltClient
 		wh  http.Handler
+		m   mocks.BoltClient
 
 		name string
 		pwd  string
@@ -33,8 +35,8 @@ var _ = Describe("Register", func() {
 		h = &handlers.Register{RedirectURL: "/", Code: 302}
 		f = &url.Values{}
 		uid = []byte("12345")
-		m := mocks.BoltClient{}
-		m.GetCall.Returns.ID = uid
+		m = mocks.BoltClient{}
+		m.GetCall.Returns.ID = []byte("")
 		m.GetCall.Returns.Error = nil
 		iDB = &m
 		name = "unique_name"
@@ -119,12 +121,40 @@ var _ = Describe("Register", func() {
 		})
 	})
 	Context("when username already exist", func() {
+		BeforeEach(func() {
+			f.Add("name", name)
+			f.Add("password", pwd)
+			m.GetCall.Returns.ID = uid
+			m.GetCall.Returns.Error = nil
+			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
+			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			wh = mw.WithDB(iDB, h)
+			wh.ServeHTTP(w, r)
+		})
 		It("should return a username exist error and 400 status code", func() {
 			Expect(w.Code).To(Equal(400))
 		})
 		It("should return a username exist error", func() {
-			Expect(w.Body.String()).To(Equal("username exist\n"))
+			Expect(w.Body.String()).To(Equal("NAME_ALREADY_EXIST\n"))
 		})
 	})
-
+	Context("db query returned error when checking a username", func() {
+		BeforeEach(func() {
+			f.Add("name", name)
+			f.Add("password", pwd)
+			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
+			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			m.GetCall.Returns.ID = nil
+			m.GetCall.Returns.Error = errors.New("DB_FAILURE")
+			iDB = &m
+			wh = mw.WithDB(iDB, h)
+			wh.ServeHTTP(w, r)
+		})
+		It("should return a 500 status code", func() {
+			Expect(w.Code).To(Equal(500))
+		})
+		It("should return an error message ", func() {
+			Expect(w.Body.String()).To(Equal("DB_FAILURE\n"))
+		})
+	})
 })
