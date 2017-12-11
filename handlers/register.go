@@ -35,15 +35,26 @@ func saveUser(r *http.Request) (int, error) {
 	if pwd = r.PostFormValue("password"); pwd == "" {
 		return 400, errors.New("missing password")
 	}
+
 	db, ok := context.GetOk(r, "db")
 	if !ok {
 		return 500, errors.New("no db connection")
 	}
-	dbp := db.(dbclient.IBoltClient)
-	err := dbp.Set(name)
-	// err := db.Set(name)
+
+	dbc := db.(dbclient.IBoltClient)
+	// Check if name already exist.
+	idBytes, err := dbc.Get(name)
+
 	if err != nil {
-		return 500, errors.New("failed to save to db")
+		return 500, err
+	}
+	if len(idBytes) != 0 {
+		return 400, errors.New("NAME_ALREADY_EXIST")
+	}
+
+	err = dbc.Set(name)
+	if err != nil {
+		return 500, err
 	}
 
 	return 200, nil
