@@ -105,7 +105,6 @@ var _ = Describe("Register", func() {
 		})
 		Context("when username already exists", func() {
 			BeforeEach(func() {
-				u = user{name: name, pwd: pwd}
 				m.GetCall.Returns.ID = uid
 				m.GetCall.Returns.Error = nil
 				behav = bdts.TestHttpRespCodeAndBody{
@@ -116,7 +115,6 @@ var _ = Describe("Register", func() {
 		})
 		Context("when db fails checking a username", func() {
 			BeforeEach(func() {
-				u = user{name: name, pwd: pwd}
 				m.GetCall.Returns.ID = nil
 				m.GetCall.Returns.Error = errors.New("DB_FAILURE")
 				behav = bdts.TestHttpRespCodeAndBody{
