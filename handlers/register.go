@@ -30,10 +30,10 @@ func saveUser(r *http.Request) (int, error) {
 		pwd  string
 	)
 	if name = r.PostFormValue("name"); name == "" {
-		return 400, errors.New("missing username")
+		return 400, errors.New("NO_ARG_NAME")
 	}
 	if pwd = r.PostFormValue("pwd"); pwd == "" {
-		return 400, errors.New("missing password")
+		return 400, errors.New("NO_ARG_PWD")
 	}
 
 	db, ok := context.GetOk(r, "db")

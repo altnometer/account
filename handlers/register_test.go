@@ -80,7 +80,7 @@ var _ = Describe("Register", func() {
 			BeforeEach(func() {
 				u = user{name: "", pwd: pwd}
 				behav = bdts.TestHttpRespCodeAndBody{
-					W: w, Code: 400, Body: "missing username"}
+					W: w, Code: 400, Body: "NO_ARG_NAME"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
@@ -89,7 +89,7 @@ var _ = Describe("Register", func() {
 			BeforeEach(func() {
 				u = user{name: name, pwd: ""}
 				behav = bdts.TestHttpRespCodeAndBody{
-					W: w, Code: 400, Body: "missing password"}
+					W: w, Code: 400, Body: "NO_ARG_PWD"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
@@ -98,7 +98,7 @@ var _ = Describe("Register", func() {
 			BeforeEach(func() {
 				u = user{name: "", pwd: ""}
 				behav = bdts.TestHttpRespCodeAndBody{
-					W: w, Code: 400, Body: "missing username"}
+					W: w, Code: 400, Body: "NO_ARG_NAME"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
