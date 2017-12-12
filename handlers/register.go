@@ -38,7 +38,7 @@ func saveUser(r *http.Request) (int, error) {
 
 	db, ok := context.GetOk(r, "db")
 	if !ok {
-		return 500, errors.New("no db connection")
+		return 500, errors.New("NO_DB_IN_CONTEXT")
 	}
 
 	dbc := db.(dbclient.IBoltClient)

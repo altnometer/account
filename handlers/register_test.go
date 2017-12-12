@@ -33,7 +33,8 @@ var _ = Describe("Register", func() {
 		uid  []byte
 		u    user // config user data for tests
 
-		behav bdts.TestHttpRespCodeAndBody
+		withDB = mw.WithDB
+		behav  bdts.TestHttpRespCodeAndBody
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
@@ -54,7 +55,8 @@ var _ = Describe("Register", func() {
 		f.Add("pwd", u.pwd)
 		r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		wh = mw.WithDB(iDB, h) // wh - wrapped handler
+		// wh = mw.WithDB(iDB, h) // wh - wrapped handler
+		wh = withDB(iDB, h) // wh - wrapped handler
 		wh.ServeHTTP(w, r)
 	})
 	Describe("valid user details", func() {
@@ -123,5 +125,18 @@ var _ = Describe("Register", func() {
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
+	})
+	Describe("No db client is passed by middleware", func() {
+		BeforeEach(func() {
+			// the mock does passes IBoltClient to context.
+			withDB = func(_ dbclient.IBoltClient, h http.Handler) http.Handler {
+				return h
+			}
+			behav = bdts.TestHttpRespCodeAndBody{
+				W: w, Code: 500, Body: "NO_DB_IN_CONTEXT"}
+		})
+		It("returns correct status code", bdts.AssertStatusCode(&behav))
+		It("returns correct err msg", bdts.AssertRespBody(&behav))
+
 	})
 })
