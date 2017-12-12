@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/altnometer/account/common/bdts"
 	"github.com/altnometer/account/dbclient"
 	"github.com/altnometer/account/handlers"
 	"github.com/altnometer/account/mocks"
@@ -17,18 +18,22 @@ import (
 )
 
 var _ = Describe("Register", func() {
+	type user struct{ name, pwd string }
 	var (
 		w   *httptest.ResponseRecorder
 		r   *http.Request
-		f   *url.Values
-		h   *handlers.Register
+		f   *url.Values        // form values
+		h   *handlers.Register // handler struct under test
 		iDB dbclient.IBoltClient
-		wh  http.Handler
+		wh  http.Handler // wrapped handler
 		m   mocks.BoltClient
 
 		name string
 		pwd  string
 		uid  []byte
+		u    user // config user data for tests
+
+		behav bdts.TestHttpRespCodeAndBody
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
@@ -41,27 +46,25 @@ var _ = Describe("Register", func() {
 		iDB = &m
 		name = "unique_name"
 		pwd = "secret_password"
+		u = user{name: name, pwd: pwd}
+
 	})
-	Context("with valid submitted user details", func() {
-		BeforeEach(func() {
-			f.Add("name", name)
-			f.Add("password", pwd)
-			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
-			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-			wh = mw.WithDB(iDB, h)
-		})
-		It("should redirect with the correct status code.", func() {
-			wh.ServeHTTP(w, r)
+	JustBeforeEach(func() {
+		f.Add("name", u.name)
+		f.Add("pwd", u.pwd)
+		r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
+		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		wh = mw.WithDB(iDB, h) // wh - wrapped handler
+		wh.ServeHTTP(w, r)
+	})
+	Describe("valid user details", func() {
+		It("redirects correctly", func() {
 			Expect(w.Code).To(Equal(h.Code))
-		})
-		It("should redirect to the correct url.", func() {
-			wh.ServeHTTP(w, r)
 			newUrl, err := w.Result().Location()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(newUrl.Path).To(Equal(h.RedirectURL))
 		})
-		It("should envoke db method to save user data", func() {
-			wh.ServeHTTP(w, r)
+		It("envokes db method saving user data", func() {
 			db, ok := context.GetOk(r, "db")
 			Expect(ok).To(Equal(true))
 			mdb, ok := (db).(*mocks.BoltClient)
@@ -69,92 +72,58 @@ var _ = Describe("Register", func() {
 			Expect(mdb.SetCall.Receives.Name).To(Equal(name))
 			Expect(mdb.SetCall.Returns.Error).To(BeNil())
 		})
-		It("should publish to kafka stream", func() {
+		PIt("publishes to kafka stream", func() {
 		})
 	})
-	Context("with missing username", func() {
-		BeforeEach(func() {
-			f.Add("name", "")
-			f.Add("password", pwd)
-			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
-			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-			wh = mw.WithDB(iDB, h)
-			wh.ServeHTTP(w, r)
+	Describe("invalid user details", func() {
+		Context("with missing username", func() {
+			BeforeEach(func() {
+				u = user{name: "", pwd: pwd}
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "missing username"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
-		It("should return a 400 status code", func() {
-			Expect(w.Code).To(Equal(400))
+		Context("with missing password", func() {
+			BeforeEach(func() {
+				u = user{name: name, pwd: ""}
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "missing password"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
-		It("should return a missing username error", func() {
-			Expect(w.Body.String()).To(Equal("missing username\n"))
+		Context("with missing username and password ", func() {
+			BeforeEach(func() {
+				u = user{name: "", pwd: ""}
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "missing username"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
-	})
-	Context("with missing password", func() {
-		BeforeEach(func() {
-			f.Add("name", name)
-			f.Add("password", "")
-			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
-			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-			wh = mw.WithDB(iDB, h)
-			wh.ServeHTTP(w, r)
+		Context("when username already exists", func() {
+			BeforeEach(func() {
+				u = user{name: name, pwd: pwd}
+				m.GetCall.Returns.ID = uid
+				m.GetCall.Returns.Error = nil
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "NAME_ALREADY_EXISTS"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
-		It("should return a 400 status code", func() {
-			Expect(w.Code).To(Equal(400))
-		})
-		It("should return a missing password error", func() {
-			Expect(w.Body.String()).To(Equal("missing password\n"))
-		})
-	})
-	Context("with missing username and password ", func() {
-		BeforeEach(func() {
-			f.Add("name", "")
-			f.Add("password", "")
-			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
-			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-			wh = mw.WithDB(iDB, h)
-			wh.ServeHTTP(w, r)
-		})
-		It("should return a 400 status code", func() {
-			Expect(w.Code).To(Equal(400))
-		})
-		It("should return a missing username error", func() {
-			Expect(w.Body.String()).To(Equal("missing username\n"))
-		})
-	})
-	Context("when username already exist", func() {
-		BeforeEach(func() {
-			f.Add("name", name)
-			f.Add("password", pwd)
-			m.GetCall.Returns.ID = uid
-			m.GetCall.Returns.Error = nil
-			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
-			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-			wh = mw.WithDB(iDB, h)
-			wh.ServeHTTP(w, r)
-		})
-		It("should return a username exist error and 400 status code", func() {
-			Expect(w.Code).To(Equal(400))
-		})
-		It("should return a username exist error", func() {
-			Expect(w.Body.String()).To(Equal("NAME_ALREADY_EXIST\n"))
-		})
-	})
-	Context("db query returned error when checking a username", func() {
-		BeforeEach(func() {
-			f.Add("name", name)
-			f.Add("password", pwd)
-			r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
-			r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-			m.GetCall.Returns.ID = nil
-			m.GetCall.Returns.Error = errors.New("DB_FAILURE")
-			iDB = &m
-			wh = mw.WithDB(iDB, h)
-			wh.ServeHTTP(w, r)
-		})
-		It("should return a 500 status code", func() {
-			Expect(w.Code).To(Equal(500))
-		})
-		It("should return an error message ", func() {
-			Expect(w.Body.String()).To(Equal("DB_FAILURE\n"))
+		Context("when db fails checking a username", func() {
+			BeforeEach(func() {
+				u = user{name: name, pwd: pwd}
+				m.GetCall.Returns.ID = nil
+				m.GetCall.Returns.Error = errors.New("DB_FAILURE")
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 500, Body: "DB_FAILURE"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
 	})
 })
