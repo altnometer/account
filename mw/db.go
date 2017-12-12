@@ -19,6 +19,6 @@ func (dbw *dbWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // WithDB wrapps given http.Handler and passes a db client.
-func WithDB(dbc dbclient.IBoltClient, h http.Handler) http.Handler {
+var WithDB = func(dbc dbclient.IBoltClient, h http.Handler) http.Handler {
 	return &dbWrapper{dbc: dbc, h: h}
 }
