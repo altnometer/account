@@ -32,7 +32,7 @@ func saveUser(r *http.Request) (int, error) {
 	if name = r.PostFormValue("name"); name == "" {
 		return 400, errors.New("missing username")
 	}
-	if pwd = r.PostFormValue("password"); pwd == "" {
+	if pwd = r.PostFormValue("pwd"); pwd == "" {
 		return 400, errors.New("missing password")
 	}
 
