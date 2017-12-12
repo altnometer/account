@@ -36,14 +36,14 @@ func (bc *BoltClient) OpenDB() {
 }
 
 // Get user data from DB.
-func (bc *BoltClient) Get(name string) ([]byte, error) {
+func (bc *BoltClient) Get(byname string) ([]byte, error) {
 	// acc := account.Account{}
 	var id []byte
 	err := bc.boltDB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bc.BucketName))
-		// accountBytes := b.Get([]byte(name))
-		// accountBytes := b.Get([]byte(name))
-		id = b.Get([]byte(name))
+		// accountBytes := b.Get([]byte(byname))
+		// accountBytes := b.Get([]byte(byname))
+		id = b.Get([]byte(byname))
 		// err := json.Unmarshal(accountBytes, &acc)
 		// if err != nil {
 		// return errors.New("Error when unmarshal db []bytes to acc struct")
