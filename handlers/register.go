@@ -42,14 +42,14 @@ func saveUser(r *http.Request) (int, error) {
 	}
 
 	dbc := db.(dbclient.IBoltClient)
-	// Check if name already exist.
+	// Check if name already exists.
 	idBytes, err := dbc.Get(name)
 
 	if err != nil {
 		return 500, err
 	}
 	if len(idBytes) != 0 {
-		return 400, errors.New("NAME_ALREADY_EXIST")
+		return 400, errors.New("NAME_ALREADY_EXISTS")
 	}
 
 	err = dbc.Set(name)
