@@ -15,5 +15,5 @@ type RegRawData struct {
 // RegData holds ready for db data.
 type RegData struct {
 	Account
-	EncodedPassword string `json:"encoded_password"`
+	EncPwd string `json:"enc_pwd"`
 }
