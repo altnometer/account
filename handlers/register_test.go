@@ -33,8 +33,9 @@ var _ = Describe("Register", func() {
 		uid  []byte
 		u    user // config user data for tests
 
-		withDB = mw.WithDB
-		behav  bdts.TestHttpRespCodeAndBody
+		withDB       = mw.WithDB
+		behav        bdts.TestHttpRespCodeAndBody
+		hasherBefore = handlers.HashPassword
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
@@ -48,6 +49,10 @@ var _ = Describe("Register", func() {
 		name = "unique_name"
 		pwd = "secret_password"
 		u = user{name: name, pwd: pwd}
+
+	})
+	AfterEach(func() {
+		handlers.HashPassword = hasherBefore
 
 	})
 	JustBeforeEach(func() {
@@ -73,8 +78,6 @@ var _ = Describe("Register", func() {
 			Expect(ok).To(Equal(true))
 			Expect(mdb.SetCall.Receives.Name).To(Equal(name))
 			Expect(mdb.SetCall.Returns.Error).To(BeNil())
-		})
-		PIt("publishes to kafka stream", func() {
 		})
 	})
 	Describe("invalid user details", func() {
@@ -138,5 +141,19 @@ var _ = Describe("Register", func() {
 		It("returns correct status code", bdts.AssertStatusCode(&behav))
 		It("returns correct err msg", bdts.AssertRespBody(&behav))
 
+	})
+	Describe("password hasher fails", func() {
+		BeforeEach(func() {
+			handlers.HashPassword = func(pwd string) (string, error) {
+				return "", errors.New(behav.Body)
+			}
+			handlers.HashPassword("hams")
+			behav = bdts.TestHttpRespCodeAndBody{
+				W: w, Code: 500, Body: "password hasher failed"}
+		})
+		It("returns correct status code", bdts.AssertStatusCode(&behav))
+		It("returns correct err msg", bdts.AssertRespBody(&behav))
+	})
+	Describe("publishes to kafka stream", func() {
 	})
 })
