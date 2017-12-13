@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -33,7 +32,6 @@ func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), code)
 		return
 	}
-	fmt.Printf("regData = %+v\n", regData)
 	if code, err := saveUser(regData, r); err != nil {
 		http.Error(w, err.Error(), code)
 		return
@@ -51,9 +49,6 @@ func getRegData(r *http.Request) (*account.RegData, int, error) {
 		return nil, 500, err
 	}
 
-	// Comparing the password with the hash
-	// err = bcrypt.CompareHashAndPassword(hashedPwd, pwd)
-	// fmt.Println(err) // nil means it is a match
 	acc := &account.RegData{
 		Account: account.Account{ID: uuid.NewV1().String(), Name: fVals.name},
 		EncPwd:  string(hashedPwd),
