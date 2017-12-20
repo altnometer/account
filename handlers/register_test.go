@@ -39,7 +39,7 @@ var _ = Describe("Register", func() {
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
-		h = &handlers.Register{RedirectURL: "/", Code: 302}
+		h = &handlers.Register{RedirectURL: "/", StatusCode: 302}
 		f = &url.Values{}
 		uid = []byte("12345")
 		m = mocks.BoltClient{}
@@ -66,7 +66,7 @@ var _ = Describe("Register", func() {
 	})
 	Describe("valid user details", func() {
 		It("redirects correctly", func() {
-			Expect(w.Code).To(Equal(h.Code))
+			Expect(w.Code).To(Equal(h.StatusCode))
 			newUrl, err := w.Result().Location()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(newUrl.Path).To(Equal(h.RedirectURL))

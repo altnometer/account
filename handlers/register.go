@@ -16,7 +16,7 @@ import (
 // Register struct method ServeHTTP handles user registration.
 type Register struct {
 	RedirectURL string
-	Code        int
+	StatusCode  int
 }
 
 type formVals struct {
@@ -36,7 +36,7 @@ func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), code)
 		return
 	}
-	http.Redirect(w, r, reg.RedirectURL, reg.Code)
+	http.Redirect(w, r, reg.RedirectURL, reg.StatusCode)
 }
 func getRegData(r *http.Request) (*account.RegData, int, error) {
 	fVals, code, err := getFormVals(r)
@@ -96,12 +96,14 @@ func saveUser(acc *account.RegData, r *http.Request) (int, error) {
 	return 200, nil
 }
 
+// HashPassword hashes submitted password.
 var HashPassword = func(pwd string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword(
 		[]byte(pwd), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
+// CheckPasswordHash compares submited password with stored hash.
 var CheckPasswordHash = func(pwd, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(pwd))
 	return err == nil
