@@ -50,6 +50,9 @@ func getRegData(r *http.Request) (*account.RegData, int, error) {
 	if err != nil {
 		return nil, code, err
 	}
+	if err := checkUNameIsValidUTF8(fVals.name); err != nil {
+		return nil, 400, err
+	}
 	if err := checkUNameLength(fVals.name); err != nil {
 		return nil, 400, err
 	}
@@ -131,6 +134,12 @@ func checkUNameLength(uname string) error {
 func checkPWDLength(pwd string) error {
 	if utf8.RuneCountInString(pwd) > MaxPasswordLength {
 		return errors.New("ARG_PWD_TOO_LONG")
+	}
+	return nil
+}
+func checkUNameIsValidUTF8(uname string) error {
+	if !utf8.ValidString(uname) {
+		return errors.New("ARG_NAME_INVALID_UTF8_STRING")
 	}
 	return nil
 }

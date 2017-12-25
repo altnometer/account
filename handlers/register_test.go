@@ -138,6 +138,16 @@ var _ = Describe("Register", func() {
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
+		Context("username is an invalid utf8 string", func() {
+			uname := "zйфж\xbd"
+			BeforeEach(func() {
+				u = user{name: uname, pwd: pwd}
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "ARG_NAME_INVALID_UTF8_STRING"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
+		})
 		Context("password exceeds max length", func() {
 			pwd := strings.Repeat("й", handlers.MaxPasswordLength+1)
 			BeforeEach(func() {
