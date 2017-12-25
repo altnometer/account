@@ -24,6 +24,13 @@ const MaxPasswordLength = 128
 // MinPasswordLength limits pwd length in characters.
 const MinPasswordLength = 6
 
+// ReservedUsernames must not be part of a usernames.
+var ReservedUsernames = [...]string{
+	"admin",
+	"redmoo",
+	"supervisor",
+}
+
 // Register struct method ServeHTTP handles user registration.
 
 // Register struct method ServeHTTP handles user registration.
@@ -66,6 +73,9 @@ func getRegData(r *http.Request) (*account.RegData, int, error) {
 		return nil, 400, err
 	}
 	if err := checkUNameIsValidUTF8(fVals.name); err != nil {
+		return nil, 400, err
+	}
+	if err := checkReservedUnames(fVals.name); err != nil {
 		return nil, 400, err
 	}
 	hashedPwd, err := HashPassword(fVals.pwd)
@@ -157,6 +167,14 @@ func checkUNameIsValidUTF8(uname string) error {
 func checkNewLineChars(uname string) error {
 	if strings.Contains(uname, "\n") {
 		return errors.New("ARG_NAME_NO_NEWLINE_ALLOWED")
+	}
+	return nil
+}
+func checkReservedUnames(uname string) error {
+	for _, n := range ReservedUsernames {
+		if strings.Contains(uname, n) {
+			return errors.New("ARG_NAME_NO_RESERVED_UNAMES_ALLOWED")
+		}
 	}
 	return nil
 }

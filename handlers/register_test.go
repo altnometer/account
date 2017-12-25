@@ -2,10 +2,13 @@ package handlers_test
 
 import (
 	"errors"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/altnometer/account/common/bdts"
 	"github.com/altnometer/account/dbclient"
@@ -124,6 +127,19 @@ var _ = Describe("Register", func() {
 				m.GetCall.Returns.Error = errors.New("DB_FAILURE")
 				behav = bdts.TestHttpRespCodeAndBody{
 					W: w, Code: 500, Body: "DB_FAILURE"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
+		})
+		Context("username contains a reserved name", func() {
+			rand.Seed(time.Now().Unix())
+			rns := handlers.ReservedUsernames
+			uname := fmt.Sprintf("z%sж", rns[rand.Intn(len(rns)-1)])
+			// uname := rns[rand.Intn(len(rns)-1)]
+			BeforeEach(func() {
+				u = user{name: uname, pwd: pwd}
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "ARG_NAME_NO_RESERVED_UNAMES_ALLOWED"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
