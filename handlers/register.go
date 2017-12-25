@@ -21,6 +21,11 @@ const MaxUserNameLength = 32
 // MaxPasswordLength limits pwd length in characters.
 const MaxPasswordLength = 128
 
+// MinPasswordLength limits pwd length in characters.
+const MinPasswordLength = 6
+
+// Register struct method ServeHTTP handles user registration.
+
 // Register struct method ServeHTTP handles user registration.
 type Register struct {
 	RedirectURL string
@@ -137,6 +142,9 @@ func checkUNameLength(uname string) error {
 func checkPWDLength(pwd string) error {
 	if utf8.RuneCountInString(pwd) > MaxPasswordLength {
 		return errors.New("ARG_PWD_TOO_LONG")
+	}
+	if utf8.RuneCountInString(pwd) < MinPasswordLength {
+		return errors.New("ARG_PWD_TOO_SHORT")
 	}
 	return nil
 }
