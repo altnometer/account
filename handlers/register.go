@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"unicode/utf8"
 
 	"golang.org/x/crypto/bcrypt"
@@ -50,16 +51,18 @@ func getRegData(r *http.Request) (*account.RegData, int, error) {
 	if err != nil {
 		return nil, code, err
 	}
-	if err := checkUNameIsValidUTF8(fVals.name); err != nil {
-		return nil, 400, err
-	}
 	if err := checkUNameLength(fVals.name); err != nil {
 		return nil, 400, err
 	}
 	if err := checkPWDLength(fVals.pwd); err != nil {
 		return nil, 400, err
 	}
-
+	if err := checkNewLineChars(fVals.name); err != nil {
+		return nil, 400, err
+	}
+	if err := checkUNameIsValidUTF8(fVals.name); err != nil {
+		return nil, 400, err
+	}
 	hashedPwd, err := HashPassword(fVals.pwd)
 	if err != nil {
 		return nil, 500, err
@@ -140,6 +143,12 @@ func checkPWDLength(pwd string) error {
 func checkUNameIsValidUTF8(uname string) error {
 	if !utf8.ValidString(uname) {
 		return errors.New("ARG_NAME_INVALID_UTF8_STRING")
+	}
+	return nil
+}
+func checkNewLineChars(uname string) error {
+	if strings.Contains(uname, "\n") {
+		return errors.New("ARG_NAME_NO_NEWLINE_ALLOWED")
 	}
 	return nil
 }

@@ -148,6 +148,16 @@ var _ = Describe("Register", func() {
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
+		Context("username contains new line char", func() {
+			uname := "zйфж\n"
+			BeforeEach(func() {
+				u = user{name: uname, pwd: pwd}
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "ARG_NAME_NO_NEWLINE_ALLOWED"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
+		})
 		Context("password exceeds max length", func() {
 			pwd := strings.Repeat("й", handlers.MaxPasswordLength+1)
 			BeforeEach(func() {
