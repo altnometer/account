@@ -128,6 +128,26 @@ var _ = Describe("Register", func() {
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
+		Context("username exceeds max length", func() {
+			uname := strings.Repeat("й", handlers.MaxUserNameLength+1)
+			BeforeEach(func() {
+				u = user{name: uname, pwd: pwd}
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "ARG_NAME_TOO_LONG"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
+		})
+		Context("password exceeds max length", func() {
+			pwd := strings.Repeat("й", handlers.MaxPasswordLength+1)
+			BeforeEach(func() {
+				u = user{name: name, pwd: pwd}
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "ARG_PWD_TOO_LONG"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
+		})
 	})
 	Describe("No db client is passed by middleware", func() {
 		BeforeEach(func() {

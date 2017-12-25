@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"unicode/utf8"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -12,6 +13,12 @@ import (
 
 	"github.com/gorilla/context"
 )
+
+// MaxUserNameLength limits username length in characters.
+const MaxUserNameLength = 32
+
+// MaxPasswordLength limits pwd length in characters.
+const MaxPasswordLength = 128
 
 // Register struct method ServeHTTP handles user registration.
 type Register struct {
@@ -42,6 +49,12 @@ func getRegData(r *http.Request) (*account.RegData, int, error) {
 	fVals, code, err := getFormVals(r)
 	if err != nil {
 		return nil, code, err
+	}
+	if err := checkUNameLength(fVals.name); err != nil {
+		return nil, 400, err
+	}
+	if err := checkPWDLength(fVals.pwd); err != nil {
+		return nil, 400, err
 	}
 
 	hashedPwd, err := HashPassword(fVals.pwd)
@@ -107,4 +120,17 @@ var HashPassword = func(pwd string) (string, error) {
 var CheckPasswordHash = func(pwd, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(pwd))
 	return err == nil
+}
+
+func checkUNameLength(uname string) error {
+	if utf8.RuneCountInString(uname) > MaxUserNameLength {
+		return errors.New("ARG_NAME_TOO_LONG")
+	}
+	return nil
+}
+func checkPWDLength(pwd string) error {
+	if utf8.RuneCountInString(pwd) > MaxPasswordLength {
+		return errors.New("ARG_PWD_TOO_LONG")
+	}
+	return nil
 }
