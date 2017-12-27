@@ -15,8 +15,8 @@ import (
 type ISyncProducer interface {
 	InitConfig()
 	GetBrokers() error
-	InitMySyncProducer([]string) error
-	SendMsg([]byte)
+	InitMySyncProducer() error
+	SendAccMsg([]byte) error
 }
 
 // SyncProducer implement ISyncProducer interface.
