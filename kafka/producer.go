@@ -3,8 +3,9 @@ package kafka
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"log"
 	"os"
+	"os/signal"
 	"strings"
 
 	"github.com/Shopify/sarama"
@@ -51,6 +52,25 @@ func (p *SyncProducer) InitMySyncProducer() error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err := p.Producer.Close(); err != nil {
+			log.Fatal("Error closing sync producer", err)
+		}
+	}()
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Kill)
+
+	go func() {
+		<-c
+		if err := p.Producer.Close(); err != nil {
+			log.Fatal("Error closing sync producer", err)
+		}
+
+		log.Println("sync Producer closed")
+		os.Exit(1)
+	}()
+
 	return nil
 }
 
@@ -76,26 +96,4 @@ func (p *SyncProducer) SendAccMsg(msg []byte) error {
 
 	return nil
 
-}
-
-func sendMsg(kafka sarama.SyncProducer, event interface{}) error {
-	json, err := json.Marshal(event)
-
-	if err != nil {
-		return err
-	}
-	msgLog := sarama.ProducerMessage{
-		Topic: topic,
-		Value: sarama.StringEncoder(string(json)),
-	}
-	partition, offset, err := kafka.SendMessage(&msgLog)
-	if err != nil {
-		fmt.Printf("Kafka err: %s\n", err)
-		os.Exit(-1)
-	}
-	fmt.Printf("Message: %+v\n", event)
-	fmt.Printf("Message is stored in partition %d, offset %d\n",
-		partition, offset)
-
-	return nil
 }
