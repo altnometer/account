@@ -14,6 +14,7 @@ func newKafkaConfiguration() *sarama.Config {
 	conf.Producer.Return.Successes = true
 	// do not compress short strings.
 	// conf.Producer.Compression = sarama.CompressionLZ4
+	conf.Producer.Compression = sarama.CompressionGZIP
 	conf.ChannelBufferSize = 1
 	conf.Version = sarama.V0_11_0_0 // kafka version
 	return conf

@@ -63,8 +63,8 @@ func (p *SyncProducer) SendAccMsg(msg []byte) error {
 	}
 	msgLog := sarama.ProducerMessage{
 		Topic: topic,
-		Value: sarama.StringEncoder(string(json)),
-		// sarama.ByteEncoder()
+		// Value: sarama.StringEncoder("some_string"),
+		Value: sarama.ByteEncoder(json),
 	}
 	// partition, offset, err := kafka.SendMessage(&msgLog)
 	_, _, err = p.Producer.SendMessage(&msgLog)
