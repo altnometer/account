@@ -58,7 +58,7 @@ func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, reg.RedirectURL, reg.StatusCode)
 }
-func getRegData(r *http.Request) (*account.RegData, int, error) {
+func getRegData(r *http.Request) (*account.Account, int, error) {
 	fVals, code, err := getFormVals(r)
 	if err != nil {
 		return nil, code, err
@@ -83,9 +83,10 @@ func getRegData(r *http.Request) (*account.RegData, int, error) {
 		return nil, 500, err
 	}
 
-	acc := &account.RegData{
-		Account: account.Account{ID: uuid.NewV1().String(), Name: fVals.name},
-		EncPwd:  string(hashedPwd),
+	acc := &account.Account{
+		ID:   uuid.NewV1().String(),
+		Name: fVals.name,
+		Pwd:  string(hashedPwd),
 	}
 	return acc, 200, nil
 }
@@ -104,8 +105,7 @@ func getFormVals(r *http.Request) (*formVals, int, error) {
 	return &formVals{name, pwd}, 200, nil
 
 }
-func saveUser(acc *account.RegData, r *http.Request) (int, error) {
-
+func saveUser(acc *account.Account, r *http.Request) (int, error) {
 	db, ok := context.GetOk(r, "db")
 	if !ok {
 		return 500, errors.New("NO_DB_IN_CONTEXT")
