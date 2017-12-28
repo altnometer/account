@@ -13,9 +13,6 @@ import (
 
 // ISyncProducer interacts with kafka brokers as a producer.
 type ISyncProducer interface {
-	InitConfig()
-	GetBrokers() error
-	InitMySyncProducer() error
 	SendAccMsg([]byte) error
 }
 
@@ -26,12 +23,12 @@ type SyncProducer struct {
 	Producer sarama.SyncProducer
 }
 
-// InitConfig initialize SyncProducer.Conf.
-func (p *SyncProducer) InitConfig() {
+// initConfig initialize kafka SyncProducer conf struct.
+func (p *SyncProducer) initConfig() {
 	p.Conf = newKafkaConfiguration()
 }
 
-// GetBrokers initialize SyncProducer.Brokers field.
+// GetBrokers get kafka brokers from env variable.
 func (p *SyncProducer) GetBrokers() error {
 	brokersStr := os.Getenv("KAFKA_BROKERS")
 	if len(brokersStr) == 0 {
@@ -43,7 +40,7 @@ func (p *SyncProducer) GetBrokers() error {
 
 // InitMySyncProducer initializes kafka sync producer.
 func (p *SyncProducer) InitMySyncProducer() error {
-	p.InitConfig()
+	p.initConfig()
 	if err := p.GetBrokers(); err != nil {
 		return err
 	}
