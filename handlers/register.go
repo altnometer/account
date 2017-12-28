@@ -47,18 +47,18 @@ type formVals struct {
 // Register handles an HTTP request to register a user.
 func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// fVals, code, err := getFormVals(r)
-	regData, code, err := getRegData(r)
+	accData, code, err := getAccData(r)
 	if err != nil {
 		http.Error(w, err.Error(), code)
 		return
 	}
-	if code, err := saveUser(regData, r); err != nil {
+	if code, err := saveUser(accData, r); err != nil {
 		http.Error(w, err.Error(), code)
 		return
 	}
 	http.Redirect(w, r, reg.RedirectURL, reg.StatusCode)
 }
-func getRegData(r *http.Request) (*account.Account, int, error) {
+func getAccData(r *http.Request) (*account.Account, int, error) {
 	fVals, code, err := getFormVals(r)
 	if err != nil {
 		return nil, code, err
