@@ -31,9 +31,7 @@ var ReservedUsernames = [...]string{
 	"supervisor",
 }
 
-// Register struct method ServeHTTP handles user registration.
-
-// Register struct method ServeHTTP handles user registration.
+// Register holds data used in ServeHTTP method for user registration.
 type Register struct {
 	RedirectURL string
 	StatusCode  int
