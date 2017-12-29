@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/altnometer/account"
 	"github.com/altnometer/account/common/bdts"
 	"github.com/altnometer/account/dbclient"
 	"github.com/altnometer/account/handlers"
@@ -36,9 +37,10 @@ var _ = Describe("Register", func() {
 		uid  []byte
 		u    user // config user data for tests
 
-		withDB       = mw.WithDB
-		behav        bdts.TestHttpRespCodeAndBody
-		hasherBefore = handlers.HashPassword
+		withDB           = mw.WithDB
+		behav            bdts.TestHttpRespCodeAndBody
+		hasherBefore     func(pwd string) (string, error)
+		nameExistsBefore func(name string) bool
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
@@ -52,10 +54,13 @@ var _ = Describe("Register", func() {
 		name = "unique_name"
 		pwd = "secret_password"
 		u = user{name: name, pwd: pwd}
+		hasherBefore = handlers.HashPassword
+		nameExistsBefore = account.NameExists
 
 	})
 	AfterEach(func() {
 		handlers.HashPassword = hasherBefore
+		account.NameExists = nameExistsBefore
 
 	})
 	JustBeforeEach(func() {
@@ -115,6 +120,17 @@ var _ = Describe("Register", func() {
 			BeforeEach(func() {
 				m.GetCall.Returns.ID = uid
 				m.GetCall.Returns.Error = nil
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 400, Body: "NAME_ALREADY_EXISTS"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBody(&behav))
+		})
+		Context("when username already exists", func() {
+			BeforeEach(func() {
+				account.NameExists = func(string) bool {
+					return true
+				}
 				behav = bdts.TestHttpRespCodeAndBody{
 					W: w, Code: 400, Body: "NAME_ALREADY_EXISTS"}
 			})

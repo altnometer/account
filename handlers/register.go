@@ -76,6 +76,9 @@ func getAccData(r *http.Request) (*account.Account, int, error) {
 	if err := checkReservedUnames(fVals.name); err != nil {
 		return nil, 400, err
 	}
+	if account.NameExists(fVals.name) {
+		return nil, 400, errors.New("NAME_ALREADY_EXISTS")
+	}
 	hashedPwd, err := HashPassword(fVals.pwd)
 	if err != nil {
 		return nil, 500, err
