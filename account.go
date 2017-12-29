@@ -9,33 +9,29 @@ type Account struct {
 	Pwd  string `json:"pwd"`
 }
 
-// UNameSet stores unique usernames.
-type UNameSet struct {
+type uNameSet struct {
 	sync.RWMutex
-	M map[string]struct{}
+	m map[string]struct{}
 }
 
-// IsInSet checks if a username is in UNameSet.
-func (ns *UNameSet) IsInSet(name string) bool {
+func (ns *uNameSet) isInSet(name string) bool {
 	ns.RLock()
 	defer ns.RUnlock()
-	if _, ok := ns.M[name]; !ok {
+	if _, ok := ns.m[name]; !ok {
 		return false
 	}
 	return true
 }
 
-// AddToSet  adds a username to UNameSet.
-func (ns *UNameSet) AddToSet(name string) {
+func (ns *uNameSet) addToSet(name string) {
 	ns.Lock()
 	defer ns.Unlock()
-	ns.M[name] = struct{}{}
+	ns.m[name] = struct{}{}
 }
 
-// UNames caches unique usernames. Used to check duplicate names.
-var UNames = UNameSet{M: make(map[string]struct{})}
+var uNames = uNameSet{m: make(map[string]struct{})}
 
 // NameExists  incapsulates duplicate name checking api.
 var NameExists = func(name string) bool {
-	return UNames.IsInSet(name)
+	return uNames.isInSet(name)
 }
