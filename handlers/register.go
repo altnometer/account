@@ -8,8 +8,8 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/altnometer/account"
 	"github.com/altnometer/account/dbclient"
+	"github.com/altnometer/account/model"
 	"github.com/satori/uuid"
 
 	"github.com/gorilla/context"
@@ -56,7 +56,7 @@ func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, reg.RedirectURL, reg.StatusCode)
 }
-func getAccData(r *http.Request) (*account.Account, int, error) {
+func getAccData(r *http.Request) (*model.Account, int, error) {
 	fVals, code, err := getFormVals(r)
 	if err != nil {
 		return nil, code, err
@@ -76,7 +76,7 @@ func getAccData(r *http.Request) (*account.Account, int, error) {
 	if err := checkReservedUnames(fVals.name); err != nil {
 		return nil, 400, err
 	}
-	if account.NameExists(fVals.name) {
+	if model.UNameExists(fVals.name) {
 		return nil, 400, errors.New("NAME_ALREADY_EXISTS")
 	}
 	hashedPwd, err := HashPassword(fVals.pwd)
@@ -84,7 +84,7 @@ func getAccData(r *http.Request) (*account.Account, int, error) {
 		return nil, 500, err
 	}
 
-	acc := &account.Account{
+	acc := &model.Account{
 		ID:   uuid.NewV1().String(),
 		Name: fVals.name,
 		Pwd:  string(hashedPwd),
@@ -106,7 +106,7 @@ func getFormVals(r *http.Request) (*formVals, int, error) {
 	return &formVals{name, pwd}, 200, nil
 
 }
-func saveUser(acc *account.Account, r *http.Request) (int, error) {
+func saveUser(acc *model.Account, r *http.Request) (int, error) {
 	db, ok := context.GetOk(r, "db")
 	if !ok {
 		return 500, errors.New("NO_DB_IN_CONTEXT")

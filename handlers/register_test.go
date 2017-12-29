@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/altnometer/account"
 	"github.com/altnometer/account/common/bdts"
 	"github.com/altnometer/account/dbclient"
 	"github.com/altnometer/account/handlers"
 	"github.com/altnometer/account/mocks"
+	"github.com/altnometer/account/model"
 	"github.com/altnometer/account/mw"
 	"github.com/gorilla/context"
 	. "github.com/onsi/ginkgo"
@@ -37,10 +37,10 @@ var _ = Describe("Register", func() {
 		uid  []byte
 		u    user // config user data for tests
 
-		withDB           = mw.WithDB
-		behav            bdts.TestHttpRespCodeAndBody
-		hasherBefore     func(pwd string) (string, error)
-		nameExistsBefore func(name string) bool
+		withDB            = mw.WithDB
+		behav             bdts.TestHttpRespCodeAndBody
+		hasherBefore      func(pwd string) (string, error)
+		uNameExistsBefore func(name string) bool
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
@@ -55,12 +55,12 @@ var _ = Describe("Register", func() {
 		pwd = "secret_password"
 		u = user{name: name, pwd: pwd}
 		hasherBefore = handlers.HashPassword
-		nameExistsBefore = account.NameExists
+		uNameExistsBefore = model.UNameExists
 
 	})
 	AfterEach(func() {
 		handlers.HashPassword = hasherBefore
-		account.NameExists = nameExistsBefore
+		model.UNameExists = uNameExistsBefore
 
 	})
 	JustBeforeEach(func() {
@@ -118,7 +118,7 @@ var _ = Describe("Register", func() {
 		})
 		Context("when username already exists", func() {
 			BeforeEach(func() {
-				account.NameExists = func(string) bool {
+				model.UNameExists = func(string) bool {
 					return true
 				}
 				behav = bdts.TestHttpRespCodeAndBody{
