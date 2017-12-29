@@ -118,16 +118,6 @@ var _ = Describe("Register", func() {
 		})
 		Context("when username already exists", func() {
 			BeforeEach(func() {
-				m.GetCall.Returns.ID = uid
-				m.GetCall.Returns.Error = nil
-				behav = bdts.TestHttpRespCodeAndBody{
-					W: w, Code: 400, Body: "NAME_ALREADY_EXISTS"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("when username already exists", func() {
-			BeforeEach(func() {
 				account.NameExists = func(string) bool {
 					return true
 				}
