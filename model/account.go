@@ -1,4 +1,4 @@
-package account
+package model
 
 import "sync"
 
@@ -31,7 +31,7 @@ func (ns *uNameSet) addToSet(name string) {
 
 var uNames = uNameSet{m: make(map[string]struct{})}
 
-// NameExists  incapsulates duplicate name checking api.
-var NameExists = func(name string) bool {
+// UNameExists  incapsulates duplicate name checking api.
+var UNameExists = func(name string) bool {
 	return uNames.isInSet(name)
 }
