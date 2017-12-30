@@ -9,7 +9,7 @@ import (
 )
 
 var _ = Describe("Kafka", func() {
-	Describe("GetBrokers", func() {
+	Describe("InitMySyncProducer", func() {
 		var (
 			p             kafka.SyncProducer
 			brokersEnvVar string
@@ -27,8 +27,7 @@ var _ = Describe("Kafka", func() {
 			})
 			It("returns an error", func() {
 
-				err := p.GetBrokers()
-				// Expect(err).Should(HaveOccurred())
+				err := p.InitMySyncProducer()
 				Expect(err).Should(HaveOccurred())
 				Expect(err.Error()).To(Equal("NO_KAFKA_BROKERS_ARG_IN_ENV"))
 
@@ -40,8 +39,7 @@ var _ = Describe("Kafka", func() {
 			})
 			It("returns an error", func() {
 
-				err := p.GetBrokers()
-				// Expect(err).Should(HaveOccurred())
+				err := p.InitMySyncProducer()
 				Expect(err).Should(HaveOccurred())
 				Expect(err.Error()).To(Equal("NO_KAFKA_BROKERS_ARG_IN_ENV"))
 
