@@ -34,7 +34,7 @@ var _ = Describe("Kafka", func() {
 
 			})
 		})
-		FContext("when no KAFKA_BROKERS env var is set", func() {
+		Context("when no KAFKA_BROKERS env var is set", func() {
 			JustBeforeEach(func() {
 				os.Unsetenv("KAFKA_BROKERS")
 			})
