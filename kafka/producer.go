@@ -30,8 +30,7 @@ func (p *SyncProducer) initConfig() {
 	p.Conf = newKafkaConfiguration()
 }
 
-// GetBrokers get kafka brokers from env variable.
-func (p *SyncProducer) GetBrokers() error {
+func (p *SyncProducer) getBrokers() error {
 	brokersStr := os.Getenv("KAFKA_BROKERS")
 	if len(brokersStr) == 0 {
 		return errors.New("NO_KAFKA_BROKERS_ARG_IN_ENV")
@@ -43,7 +42,7 @@ func (p *SyncProducer) GetBrokers() error {
 // InitMySyncProducer initializes kafka sync producer.
 func (p *SyncProducer) InitMySyncProducer() error {
 	p.initConfig()
-	if err := p.GetBrokers(); err != nil {
+	if err := p.getBrokers(); err != nil {
 		return err
 	}
 	var err error
