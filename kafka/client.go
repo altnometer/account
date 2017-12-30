@@ -8,7 +8,7 @@ var (
 	topics  = []string{topic}
 )
 
-func newKafkaConfiguration() *sarama.Config {
+func newKafkaConf() *sarama.Config {
 	conf := sarama.NewConfig()
 	conf.Producer.RequiredAcks = sarama.WaitForAll
 	conf.Producer.Return.Successes = true

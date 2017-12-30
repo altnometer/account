@@ -20,14 +20,8 @@ type ISyncProducer interface {
 
 // SyncProducer implement ISyncProducer interface.
 type SyncProducer struct {
-	Conf     *sarama.Config
 	Brokers  []string
 	Producer sarama.SyncProducer
-}
-
-// initConfig initialize kafka SyncProducer conf struct.
-func (p *SyncProducer) initConfig() {
-	p.Conf = newKafkaConfiguration()
 }
 
 func (p *SyncProducer) getBrokers() error {
@@ -41,12 +35,11 @@ func (p *SyncProducer) getBrokers() error {
 
 // InitMySyncProducer initializes kafka sync producer.
 func (p *SyncProducer) InitMySyncProducer() error {
-	p.initConfig()
 	if err := p.getBrokers(); err != nil {
 		return err
 	}
 	var err error
-	p.Producer, err = sarama.NewSyncProducer(p.Brokers, p.Conf)
+	p.Producer, err = sarama.NewSyncProducer(p.Brokers, newKafkaConf())
 	if err != nil {
 		return err
 	}
