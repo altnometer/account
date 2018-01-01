@@ -46,6 +46,7 @@ var _ = Describe("Register", func() {
 		behav             bdts.TestHttpRespCodeAndBody
 		hasherBefore      func(pwd string) (string, error)
 		uNameExistsBefore func(name string) bool
+		makeUIDBefore     func() string
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
@@ -68,12 +69,20 @@ var _ = Describe("Register", func() {
 		mp.InitMySyncProducerCall.Returns.Error = nil
 		iKP = &mp
 		hasherBefore = handlers.HashPassword
+		makeUIDBefore = handlers.MakeUID
 		uNameExistsBefore = model.UNameExists
+		handlers.HashPassword = func(pwd string) (string, error) {
+			return pwd, nil
+		}
+		handlers.MakeUID = func() string {
+			return uid
+		}
 
 	})
 	AfterEach(func() {
 		handlers.HashPassword = hasherBefore
 		model.UNameExists = uNameExistsBefore
+		handlers.MakeUID = makeUIDBefore
 
 	})
 	JustBeforeEach(func() {
@@ -92,13 +101,14 @@ var _ = Describe("Register", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(newUrl.Path).To(Equal(h.RedirectURL))
 		})
-		It("envokes db method saving user data", func() {
-			db, ok := context.GetOk(r, "db")
+		It("envokes kafka producer method sending Account as a msg", func() {
+			kp, ok := context.GetOk(r, "kfkProdr")
 			Expect(ok).To(Equal(true))
-			mdb, ok := (db).(*mocks.BoltClient)
+			mkp, ok := (kp).(*mocks.KafkaSyncProducer)
 			Expect(ok).To(Equal(true))
-			Expect(mdb.SetCall.Receives.Name).To(Equal(name))
-			Expect(mdb.SetCall.Returns.Error).To(BeNil())
+			Expect(mkp.SendAccMsgCall.Receives.Acc.Name).To(Equal(acc.Name))
+			Expect(mkp.SendAccMsgCall.Receives.Acc.ID).To(Equal(acc.ID))
+			Expect(mkp.SendAccMsgCall.Receives.Acc.Pwd).To(Equal(acc.Pwd))
 		})
 	})
 	Describe("invalid user details", func() {
