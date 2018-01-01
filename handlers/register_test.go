@@ -13,6 +13,7 @@ import (
 	"github.com/altnometer/account/common/bdts"
 	"github.com/altnometer/account/dbclient"
 	"github.com/altnometer/account/handlers"
+	"github.com/altnometer/account/kafka"
 	"github.com/altnometer/account/mocks"
 	"github.com/altnometer/account/model"
 	"github.com/altnometer/account/mw"
@@ -29,15 +30,19 @@ var _ = Describe("Register", func() {
 		f   *url.Values        // form values
 		h   *handlers.Register // handler struct under test
 		iDB dbclient.IBoltClient
+		iKP kafka.ISyncProducer
 		wh  http.Handler // wrapped handler
 		m   mocks.BoltClient
+		mp  mocks.KafkaSyncProducer
 
 		name string
 		pwd  string
-		uid  []byte
+		uid  string
 		u    user // config user data for tests
+		acc  model.Account
 
 		withDB            = mw.WithDB
+		withKP            = mw.WithKafkaProducer
 		behav             bdts.TestHttpRespCodeAndBody
 		hasherBefore      func(pwd string) (string, error)
 		uNameExistsBefore func(name string) bool
@@ -46,14 +51,22 @@ var _ = Describe("Register", func() {
 		w = httptest.NewRecorder()
 		h = &handlers.Register{RedirectURL: "/", StatusCode: 302}
 		f = &url.Values{}
-		uid = []byte("12345")
+
 		m = mocks.BoltClient{}
 		m.GetCall.Returns.ID = []byte("")
 		m.GetCall.Returns.Error = nil
 		iDB = &m
-		name = "unique_name"
-		pwd = "secret_password"
+
+		name = "unameЯйцоЖЭ"
+		uid = "1234"
+		pwd = "ka88dk;ad"
 		u = user{name: name, pwd: pwd}
+		acc = model.Account{ID: uid, Name: name, Pwd: pwd}
+
+		mp = mocks.KafkaSyncProducer{}
+		mp.SendAccMsgCall.Returns.Error = nil
+		mp.InitMySyncProducerCall.Returns.Error = nil
+		iKP = &mp
 		hasherBefore = handlers.HashPassword
 		uNameExistsBefore = model.UNameExists
 
@@ -68,8 +81,8 @@ var _ = Describe("Register", func() {
 		f.Add("pwd", u.pwd)
 		r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		// wh = mw.WithDB(iDB, h) // wh - wrapped handler
-		wh = withDB(iDB, h) // wh - wrapped handler
+		wh = withDB(iDB, h)  // wh - wrapped handler
+		wh = withKP(iKP, wh) // wh - wrapped handler
 		wh.ServeHTTP(w, r)
 	})
 	Describe("valid user details", func() {
@@ -201,14 +214,15 @@ var _ = Describe("Register", func() {
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
 	})
-	Describe("No db client is passed by middleware", func() {
+	Describe("No kafka producer is passed by middleware", func() {
 		BeforeEach(func() {
-			// the mock does passes IBoltClient to context.
-			withDB = func(_ dbclient.IBoltClient, h http.Handler) http.Handler {
+			// this mock middleware does not passes ISyncProducer to
+			// request context which should raise and err.
+			withKP = func(_ kafka.ISyncProducer, h http.Handler) http.Handler {
 				return h
 			}
 			behav = bdts.TestHttpRespCodeAndBody{
-				W: w, Code: 500, Body: "NO_DB_IN_CONTEXT"}
+				W: w, Code: 500, Body: "NO_KAFKA_PRODUCER_IN_CONTEXT"}
 		})
 		It("returns correct status code", bdts.AssertStatusCode(&behav))
 		It("returns correct err msg", bdts.AssertRespBody(&behav))
