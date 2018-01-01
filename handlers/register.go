@@ -90,7 +90,7 @@ func getAccData(r *http.Request) (*model.Account, int, error) {
 	}
 
 	acc := &model.Account{
-		ID:   uuid.NewV1().String(),
+		ID:   MakeUID(),
 		Name: fVals.name,
 		Pwd:  string(hashedPwd),
 	}
@@ -150,6 +150,12 @@ var HashPassword = func(pwd string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword(
 		[]byte(pwd), bcrypt.DefaultCost)
 	return string(bytes), err
+}
+
+// MakeUID creates a new user id.
+var MakeUID = func() string {
+	return uuid.NewV1().String()
+
 }
 
 // CheckPasswordHash compares submited password with stored hash.
