@@ -8,7 +8,8 @@ import (
 	"os/signal"
 	"strings"
 	"time"
-	"try/goblog/accountservice/model"
+
+	"github.com/altnometer/account/model"
 
 	"github.com/Shopify/sarama"
 )
@@ -16,6 +17,7 @@ import (
 // ISyncProducer interacts with kafka brokers as a producer.
 type ISyncProducer interface {
 	SendAccMsg(*model.Account) error
+	InitMySyncProducer() error
 }
 
 // SyncProducer implement ISyncProducer interface.
@@ -67,7 +69,7 @@ func (p *SyncProducer) InitMySyncProducer() error {
 
 // SendAccMsg sends kafka message.
 func (p *SyncProducer) SendAccMsg(acc *model.Account) error {
-	accBytes, err := json.Marshal(acc)
+	accBytes, err := json.Marshal(&acc)
 
 	if err != nil {
 		return err
