@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/altnometer/account/dbclient"
+	"github.com/altnometer/account/kafka"
 	"github.com/altnometer/account/model"
 	"github.com/satori/uuid"
 
@@ -51,6 +52,10 @@ func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if code, err := saveUser(accData, r); err != nil {
+		http.Error(w, err.Error(), code)
+		return
+	}
+	if code, err := sendAccKafkaMsg(accData, r); err != nil {
 		http.Error(w, err.Error(), code)
 		return
 	}
@@ -106,11 +111,20 @@ func getFormVals(r *http.Request) (*formVals, int, error) {
 	return &formVals{name, pwd}, 200, nil
 
 }
-func saveUser(acc *model.Account, r *http.Request) (int, error) {
-	db, ok := context.GetOk(r, "db")
+func sendAccKafkaMsg(acc *model.Account, r *http.Request) (int, error) {
+	k, ok := context.GetOk(r, "kfkProdr")
 	if !ok {
-		return 500, errors.New("NO_DB_IN_CONTEXT")
+		return 500, errors.New("NO_KAFKA_PRODUCER_IN_CONTEXT")
 	}
+	kp := k.(kafka.ISyncProducer)
+	if err := kp.SendAccMsg(acc); err != nil {
+		return 500, err
+	}
+	return 200, nil
+}
+
+func saveUser(acc *model.Account, r *http.Request) (int, error) {
+	db, _ := context.GetOk(r, "db")
 
 	dbc := db.(dbclient.IBoltClient)
 	// Check if name already exists.
