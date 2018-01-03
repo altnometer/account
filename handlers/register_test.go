@@ -94,21 +94,25 @@ var _ = Describe("Register", func() {
 		wh = withKP(iKP, wh) // wh - wrapped handler
 		wh.ServeHTTP(w, r)
 	})
+	Describe("kafka producer", func() {
+		Context("normally", func() {
+			It("sends user Account msg", func() {
+				kp, ok := context.GetOk(r, "kfkProdr")
+				Expect(ok).To(Equal(true))
+				mkp, ok := (kp).(*mocks.KafkaSyncProducer)
+				Expect(ok).To(Equal(true))
+				Expect(mkp.SendAccMsgCall.Receives.Acc.Name).To(Equal(acc.Name))
+				Expect(mkp.SendAccMsgCall.Receives.Acc.ID).To(Equal(acc.ID))
+				Expect(mkp.SendAccMsgCall.Receives.Acc.Pwd).To(Equal(acc.Pwd))
+			})
+		})
+	})
 	Describe("valid user details", func() {
 		It("redirects correctly", func() {
 			Expect(w.Code).To(Equal(h.StatusCode))
 			newUrl, err := w.Result().Location()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(newUrl.Path).To(Equal(h.RedirectURL))
-		})
-		It("envokes kafka producer method sending Account as a msg", func() {
-			kp, ok := context.GetOk(r, "kfkProdr")
-			Expect(ok).To(Equal(true))
-			mkp, ok := (kp).(*mocks.KafkaSyncProducer)
-			Expect(ok).To(Equal(true))
-			Expect(mkp.SendAccMsgCall.Receives.Acc.Name).To(Equal(acc.Name))
-			Expect(mkp.SendAccMsgCall.Receives.Acc.ID).To(Equal(acc.ID))
-			Expect(mkp.SendAccMsgCall.Receives.Acc.Pwd).To(Equal(acc.Pwd))
 		})
 	})
 	Describe("invalid user details", func() {
