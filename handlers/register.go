@@ -8,7 +8,6 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/altnometer/account/dbclient"
 	"github.com/altnometer/account/kafka"
 	"github.com/altnometer/account/model"
 	"github.com/satori/uuid"
@@ -48,10 +47,6 @@ func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// fVals, code, err := getFormVals(r)
 	accData, code, err := getAccData(r)
 	if err != nil {
-		http.Error(w, err.Error(), code)
-		return
-	}
-	if code, err := saveUser(accData, r); err != nil {
 		http.Error(w, err.Error(), code)
 		return
 	}
@@ -120,28 +115,6 @@ func sendAccKafkaMsg(acc *model.Account, r *http.Request) (int, error) {
 	if err := kp.SendAccMsg(acc); err != nil {
 		return 500, err
 	}
-	return 200, nil
-}
-
-func saveUser(acc *model.Account, r *http.Request) (int, error) {
-	db, _ := context.GetOk(r, "db")
-
-	dbc := db.(dbclient.IBoltClient)
-	// Check if name already exists.
-	idBytes, err := dbc.Get(acc.Name)
-
-	if err != nil {
-		return 500, err
-	}
-	if len(idBytes) != 0 {
-		return 400, errors.New("NAME_ALREADY_EXISTS")
-	}
-
-	err = dbc.Set(acc.Name)
-	if err != nil {
-		return 500, err
-	}
-
 	return 200, nil
 }
 

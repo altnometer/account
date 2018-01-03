@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/altnometer/account/common/bdts"
-	"github.com/altnometer/account/dbclient"
+	// "github.com/altnometer/account/dbclient"
 	"github.com/altnometer/account/handlers"
 	"github.com/altnometer/account/kafka"
 	"github.com/altnometer/account/mocks"
@@ -29,7 +29,6 @@ var _ = Describe("Register", func() {
 		r   *http.Request
 		f   *url.Values        // form values
 		h   *handlers.Register // handler struct under test
-		iDB dbclient.IBoltClient
 		iKP kafka.ISyncProducer
 		wh  http.Handler // wrapped handler
 		m   mocks.BoltClient
@@ -41,7 +40,6 @@ var _ = Describe("Register", func() {
 		u    user // config user data for tests
 		acc  model.Account
 
-		withDB            = mw.WithDB
 		withKP            = mw.WithKafkaProducer
 		behav             bdts.TestHttpRespCodeAndBody
 		hasherBefore      func(pwd string) (string, error)
@@ -56,7 +54,6 @@ var _ = Describe("Register", func() {
 		m = mocks.BoltClient{}
 		m.GetCall.Returns.ID = []byte("")
 		m.GetCall.Returns.Error = nil
-		iDB = &m
 
 		name = "unameЯйцоЖЭ"
 		uid = "1234"
@@ -90,8 +87,7 @@ var _ = Describe("Register", func() {
 		f.Add("pwd", u.pwd)
 		r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		wh = withDB(iDB, h)  // wh - wrapped handler
-		wh = withKP(iKP, wh) // wh - wrapped handler
+		wh = withKP(iKP, h) // wh - wrapped handler
 		wh.ServeHTTP(w, r)
 	})
 	Describe("kafka producer", func() {
@@ -150,16 +146,6 @@ var _ = Describe("Register", func() {
 				}
 				behav = bdts.TestHttpRespCodeAndBody{
 					W: w, Code: 400, Body: "NAME_ALREADY_EXISTS"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("when db fails checking a username", func() {
-			BeforeEach(func() {
-				m.GetCall.Returns.ID = nil
-				m.GetCall.Returns.Error = errors.New("DB_FAILURE")
-				behav = bdts.TestHttpRespCodeAndBody{
-					W: w, Code: 500, Body: "DB_FAILURE"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
@@ -253,7 +239,5 @@ var _ = Describe("Register", func() {
 		})
 		It("returns correct status code", bdts.AssertStatusCode(&behav))
 		It("returns correct err msg", bdts.AssertRespBody(&behav))
-	})
-	Describe("publishes to kafka stream", func() {
 	})
 })
