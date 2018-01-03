@@ -40,7 +40,7 @@ var _ = Describe("Register", func() {
 		acc  model.Account
 
 		withKP            = mw.WithKafkaProducer
-		behav             bdts.TestHttpRespCodeAndBody
+		behav             bdts.TestHTTPRespCodeAndBody
 		hasherBefore      func(pwd string) (string, error)
 		uNameExistsBefore func(name string) bool
 		makeUIDBefore     func() string
@@ -104,7 +104,7 @@ var _ = Describe("Register", func() {
 		Context("falls to send msg", func() {
 			BeforeEach(func() {
 				mp.SendAccMsgCall.Returns.Error = errors.New("test error")
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 500, Body: "FAILED_KAFKA_MSG_SEND"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -123,7 +123,7 @@ var _ = Describe("Register", func() {
 		Context("with missing username", func() {
 			BeforeEach(func() {
 				u = user{name: "", pwd: pwd}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "NO_ARG_NAME"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -132,7 +132,7 @@ var _ = Describe("Register", func() {
 		Context("with missing password", func() {
 			BeforeEach(func() {
 				u = user{name: name, pwd: ""}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "NO_ARG_PWD"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -141,7 +141,7 @@ var _ = Describe("Register", func() {
 		Context("with missing username and password ", func() {
 			BeforeEach(func() {
 				u = user{name: "", pwd: ""}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "NO_ARG_NAME"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -152,7 +152,7 @@ var _ = Describe("Register", func() {
 				model.UNameExists = func(string) bool {
 					return true
 				}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "NAME_ALREADY_EXISTS"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -165,7 +165,7 @@ var _ = Describe("Register", func() {
 			// uname := rns[rand.Intn(len(rns)-1)]
 			BeforeEach(func() {
 				u = user{name: uname, pwd: pwd}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "ARG_NAME_NO_RESERVED_UNAMES_ALLOWED"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -175,7 +175,7 @@ var _ = Describe("Register", func() {
 			uname := strings.Repeat("й", handlers.MaxUserNameLength+1)
 			BeforeEach(func() {
 				u = user{name: uname, pwd: pwd}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "ARG_NAME_TOO_LONG"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -185,7 +185,7 @@ var _ = Describe("Register", func() {
 			uname := "zйфж\xbd"
 			BeforeEach(func() {
 				u = user{name: uname, pwd: pwd}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "ARG_NAME_INVALID_UTF8_STRING"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -195,7 +195,7 @@ var _ = Describe("Register", func() {
 			uname := "zйфж\n"
 			BeforeEach(func() {
 				u = user{name: uname, pwd: pwd}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "ARG_NAME_NO_NEWLINE_ALLOWED"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -205,7 +205,7 @@ var _ = Describe("Register", func() {
 			pwd := strings.Repeat("й", handlers.MaxPasswordLength+1)
 			BeforeEach(func() {
 				u = user{name: name, pwd: pwd}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "ARG_PWD_TOO_LONG"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -215,7 +215,7 @@ var _ = Describe("Register", func() {
 			pwd := strings.Repeat("й", handlers.MinPasswordLength-1)
 			BeforeEach(func() {
 				u = user{name: name, pwd: pwd}
-				behav = bdts.TestHttpRespCodeAndBody{
+				behav = bdts.TestHTTPRespCodeAndBody{
 					W: w, Code: 400, Body: "ARG_PWD_TOO_SHORT"}
 			})
 			It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -229,7 +229,7 @@ var _ = Describe("Register", func() {
 			withKP = func(_ kafka.ISyncProducer, h http.Handler) http.Handler {
 				return h
 			}
-			behav = bdts.TestHttpRespCodeAndBody{
+			behav = bdts.TestHTTPRespCodeAndBody{
 				W: w, Code: 500, Body: "NO_KAFKA_PRODUCER_IN_CONTEXT"}
 		})
 		It("returns correct status code", bdts.AssertStatusCode(&behav))
@@ -242,7 +242,7 @@ var _ = Describe("Register", func() {
 				return "", errors.New(behav.Body)
 			}
 			handlers.HashPassword("hams")
-			behav = bdts.TestHttpRespCodeAndBody{
+			behav = bdts.TestHTTPRespCodeAndBody{
 				W: w, Code: 500, Body: "password hasher failed"}
 		})
 		It("returns correct status code", bdts.AssertStatusCode(&behav))

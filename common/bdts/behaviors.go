@@ -8,29 +8,29 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// TestHttpRespCodeAndBody refactors testing response body and status code.
-type TestHttpRespCodeAndBody struct {
+// TestHTTPRespCodeAndBody refactors testing response body and status code.
+type TestHTTPRespCodeAndBody struct {
 	W    *httptest.ResponseRecorder
 	Code int
 	Body string
 }
 
 // AssertStatusCode tests status code of a response.
-func AssertStatusCode(inputs *TestHttpRespCodeAndBody) func() {
+func AssertStatusCode(inputs *TestHTTPRespCodeAndBody) func() {
 	return func() {
 		Expect(inputs.W.Code).To(Equal(inputs.Code))
 	}
 }
 
 // AssertRespBody tests if response body is a string.
-func AssertRespBody(inputs *TestHttpRespCodeAndBody) func() {
+func AssertRespBody(inputs *TestHTTPRespCodeAndBody) func() {
 	return func() {
 		Expect(inputs.W.Body.String()).To(Equal(inputs.Body + "\n"))
 	}
 }
 
 // AssertRespBodyContains tests if response body contains a string.
-func AssertRespBodyContains(inputs *TestHttpRespCodeAndBody) func() {
+func AssertRespBodyContains(inputs *TestHTTPRespCodeAndBody) func() {
 	return func() {
 		Expect(inputs.W.Body.String()).Should(ContainSubstring(inputs.Body))
 	}
