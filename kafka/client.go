@@ -3,9 +3,9 @@ package kafka
 import "github.com/Shopify/sarama"
 
 var (
-	brokers = []string{"127.0.0.1:9092"}
-	topic   = "account"
-	topics  = []string{topic}
+	// brokers = []string{"127.0.0.1:9092"}
+	topic = "account"
+	// topics = []string{topic}
 )
 
 func newKafkaConf() *sarama.Config {
