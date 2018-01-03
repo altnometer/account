@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"unicode/utf8"
@@ -113,7 +114,7 @@ func sendAccKafkaMsg(acc *model.Account, r *http.Request) (int, error) {
 	}
 	kp := k.(kafka.ISyncProducer)
 	if err := kp.SendAccMsg(acc); err != nil {
-		return 500, err
+		return 500, fmt.Errorf("FAILED_KAFKA_MSG_SEND: %s", err.Error())
 	}
 	return 200, nil
 }

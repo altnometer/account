@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/altnometer/account/common/bdts"
-	// "github.com/altnometer/account/dbclient"
 	"github.com/altnometer/account/handlers"
 	"github.com/altnometer/account/kafka"
 	"github.com/altnometer/account/mocks"
@@ -101,6 +100,15 @@ var _ = Describe("Register", func() {
 				Expect(mkp.SendAccMsgCall.Receives.Acc.ID).To(Equal(acc.ID))
 				Expect(mkp.SendAccMsgCall.Receives.Acc.Pwd).To(Equal(acc.Pwd))
 			})
+		})
+		Context("falls to send msg", func() {
+			BeforeEach(func() {
+				mp.SendAccMsgCall.Returns.Error = errors.New("test error")
+				behav = bdts.TestHttpRespCodeAndBody{
+					W: w, Code: 500, Body: "FAILED_KAFKA_MSG_SEND"}
+			})
+			It("returns correct status code", bdts.AssertStatusCode(&behav))
+			It("returns correct err msg", bdts.AssertRespBodyContains(&behav))
 		})
 	})
 	Describe("valid user details", func() {
