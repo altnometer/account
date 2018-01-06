@@ -14,6 +14,9 @@ import (
 const port = "8089"
 const serverAddress = "127.0.0.1:" + port
 
+// const brokersEnvVar = "127.0.0.1:9092,127.0.0.1:9092"
+// os.Setenv("KAFKA_BROKERS", brokersEnvVar)
+
 var pathToServerBinary string
 var serverSession *gexec.Session
 
