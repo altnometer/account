@@ -1,15 +1,41 @@
 package main
 
 import (
+	"bufio"
 	"flag"
+	"os"
 
 	"github.com/altnometer/account/service"
+	"github.com/altnometer/kafkalog"
 )
 
 func main() {
 	port := flag.String("port", "8080", "server port")
+	env := flag.String("env", "dev", "environment, accepted values: dev, prod")
 	flag.Parse()
 	service.StartWebServer(*port)
+	if *env == "prod" {
+		old := os.Stdout
+		r, w, err := os.Pipe()
+		if err != nil {
+			panic("Error running os.Pipe()")
+		}
+		os.Stdout = w
+		lw := kafkalog.NewAsyncProducer("loggerID")
+		defer func() {
+			w.Close()
+			os.Stdout = old
+			lw.Close()
+		}()
+		go func() {
+			sc := bufio.NewScanner(r)
+			for sc.Scan() {
+				l := sc.Text()
+				lw.Send(l)
+			}
+		}()
+
+	}
 	// reader := bufio.NewReader(os.Stdin)
 	// kp := kafka.SyncProducer{}
 	// err := kp.InitMySyncProducer()
