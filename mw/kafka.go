@@ -21,9 +21,8 @@ func (p *kafkaProdrWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // WithKafkaProducer wrapps given http.Handler and passes a kafka producer.
 var WithKafkaProducer = func(kp kafka.ISyncProducer, h http.Handler) http.Handler {
 	if err := kp.InitMySyncProducer(); err != nil {
-		// log.Fatal("Error initializing kafka SyncProducer", err)
-		// TODO: must send logs to kafka log stream.
-		panic(fmt.Sprintf("Error initializing kafka SyncProducer: %s", err.Error()))
+		fmt.Printf("Error initializing kafka SyncProducer: %s\n", err.Error())
+		panic(fmt.Sprintf("Error initializing kafka SyncProducer: %s\n", err.Error()))
 	}
 	return &kafkaProdrWrapper{prodr: kp, h: h}
 }

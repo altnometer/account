@@ -2,7 +2,6 @@ package dbclient
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/boltdb/bolt"
 	"github.com/satori/uuid"
@@ -31,7 +30,8 @@ func (bc *BoltClient) OpenDB() {
 	var err error
 	bc.boltDB, err = bolt.Open(bc.FileName, 0600, nil)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
+		panic(err.Error())
 	}
 }
 

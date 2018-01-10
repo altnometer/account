@@ -3,7 +3,7 @@ package kafka
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -47,7 +47,8 @@ func (p *SyncProducer) InitMySyncProducer() error {
 	}
 	defer func() {
 		if err := p.Producer.Close(); err != nil {
-			log.Fatal("Error closing sync producer", err)
+			fmt.Printf("Failed closing kafka producer with err: %s\n", err)
+			panic("Error closing kafka producer, err: " + err.Error())
 		}
 	}()
 	c := make(chan os.Signal, 1)
@@ -57,10 +58,11 @@ func (p *SyncProducer) InitMySyncProducer() error {
 	go func() {
 		<-c
 		if err := p.Producer.Close(); err != nil {
-			log.Fatal("Error closing sync producer", err)
+			fmt.Printf("Failed closing kafka producer with err: %s\n", err)
+			panic("Error closing kafka producer, err: " + err.Error())
 		}
 
-		log.Println("sync Producer closed")
+		fmt.Println("kafka producer is closed")
 		os.Exit(1)
 	}()
 
