@@ -61,14 +61,18 @@ func (bc *BoltClient) Get(byname string) ([]byte, error) {
 // Set user data into DB.
 func (bc *BoltClient) Set(name string) error {
 	// id := uuid.NewV4().String()
-	id := uuid.NewV4().Bytes()
+	idUUIDObj, err := uuid.NewV4()
+	if err != nil {
+		return err
+	}
+	id := idUUIDObj.Bytes()
 
 	// acc := Account{
 	// 	ID:   id,
 	// 	Name: name,
 	// }
 	// jsonBytes, _ := json.Marshal(acc)
-	err := bc.boltDB.Update(func(tx *bolt.Tx) error {
+	err = bc.boltDB.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bc.BucketName))
 		// err := b.Put([]byte(name), jsonBytes)
 		err := b.Put([]byte(name), id)
