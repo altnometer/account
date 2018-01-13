@@ -43,7 +43,7 @@ var _ = Describe("Register", func() {
 		behav             bdts.TestHTTPRespCodeAndBody
 		hasherBefore      func(pwd string) (string, error)
 		uNameExistsBefore func(name string) bool
-		makeUIDBefore     func() string
+		makeUIDBefore     func() (string, error)
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
@@ -65,13 +65,12 @@ var _ = Describe("Register", func() {
 		mp.InitMySyncProducerCall.Returns.Error = nil
 		iKP = &mp
 		hasherBefore = handlers.HashPassword
-		makeUIDBefore = handlers.MakeUID
 		uNameExistsBefore = model.UNameExists
 		handlers.HashPassword = func(pwd string) (string, error) {
 			return pwd, nil
 		}
-		handlers.MakeUID = func() string {
-			return uid
+		handlers.MakeUID = func() (string, error) {
+			return uid, nil
 		}
 
 	})

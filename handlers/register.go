@@ -84,9 +84,13 @@ func getAccData(r *http.Request) (*model.Account, int, error) {
 	if err != nil {
 		return nil, 500, err
 	}
+	id, err := MakeUID()
+	if err != nil {
+		return nil, 500, err
+	}
 
 	acc := &model.Account{
-		ID:   MakeUID(),
+		ID:   id,
 		Name: fVals.name,
 		Pwd:  string(hashedPwd),
 	}
@@ -127,8 +131,13 @@ var HashPassword = func(pwd string) (string, error) {
 }
 
 // MakeUID creates a new user id.
-var MakeUID = func() string {
-	return uuid.NewV1().String()
+var MakeUID = func() (string, error) {
+	idUUIDObj, err := uuid.NewV4()
+	if err != nil {
+		return "", err
+	}
+	id := idUUIDObj.String()
+	return id, nil
 
 }
 
