@@ -4,6 +4,7 @@ package bdts
 
 import (
 	"net/http/httptest"
+	"strings"
 
 	. "github.com/onsi/gomega"
 )
@@ -25,7 +26,8 @@ func AssertStatusCode(inputs *TestHTTPRespCodeAndBody) func() {
 // AssertRespBody tests if response body is a string.
 func AssertRespBody(inputs *TestHTTPRespCodeAndBody) func() {
 	return func() {
-		Expect(inputs.W.Body.String()).To(Equal(inputs.Body + "\n"))
+		body := strings.TrimSpace(inputs.W.Body.String())
+		Expect(body).To(Equal(inputs.Body))
 	}
 }
 
