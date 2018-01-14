@@ -13,7 +13,6 @@ func main() {
 	port := flag.String("port", "8080", "server port")
 	env := flag.String("env", "dev", "environment, accepted values: dev, prod")
 	flag.Parse()
-	service.StartWebServer(*port)
 	if *env == "prod" {
 		old := os.Stdout
 		r, w, err := os.Pipe()
@@ -36,6 +35,7 @@ func main() {
 		}()
 
 	}
+	service.StartWebServer(*port)
 	// reader := bufio.NewReader(os.Stdin)
 	// kp := kafka.SyncProducer{}
 	// err := kp.InitMySyncProducer()
