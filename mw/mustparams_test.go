@@ -17,15 +17,15 @@ import (
 type paramStruct struct{ Testparam1, Testparam2 string }
 
 var (
-	paramStr  paramStruct
+	paramSt   paramStruct
 	paramMap  map[string]string
 	paramKeys []string
 )
 
 func init() {
-	paramStr = paramStruct{Testparam1: "testval1",
+	paramSt = paramStruct{Testparam1: "testval1",
 		Testparam2: "true"}
-	v := reflect.ValueOf(paramStr)
+	v := reflect.ValueOf(paramSt)
 	paramKeys = make([]string, v.NumField())
 	paramMap = make(map[string]string)
 	for i := 0; i < v.NumField(); i++ {
@@ -114,8 +114,8 @@ var _ = Describe("MustParamsPOST", func() {
 			})
 		}
 		urlVals = &url.Values{}
-		tParams = paramMap   // default params to set in query
-		tParamStr = paramStr // default params to check
+		tParams = paramMap  // default params to set in query
+		tParamStr = paramSt // default params to check
 	})
 	JustBeforeEach(func() {
 		for k, v := range tParams {
@@ -129,7 +129,7 @@ var _ = Describe("MustParamsPOST", func() {
 	Context("params are present", func() {
 		BeforeEach(func() {
 			tParams = paramMap
-			tParamStr = paramStr
+			tParamStr = paramSt
 			behav = bdts.TestHTTPRespCodeAndBody{
 				W: w, Code: 200, Body: "wrapped handler response"}
 		})
