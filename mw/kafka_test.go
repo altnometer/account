@@ -98,7 +98,7 @@ var _ = Describe("WithKafkaProducer", func() {
 	})
 	Context("when InitMySyncProducer returns and error", func() {
 		BeforeEach(func() {
-			m.InitMySyncProducerCall.Returns.Error = errors.New("testing error")
+			m.InitMySyncProducerCall.Returns.Error = errors.New("mock error")
 			mHand = func() http.Handler {
 				fn := func(w http.ResponseWriter, r *http.Request) {
 					_, ok := context.GetOk(r, "kfkProdr")
