@@ -22,6 +22,14 @@ var (
 	paramKeys []string
 )
 
+type mockHandler struct {
+	ServeHTTPCalled bool
+}
+
+func (mh *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	mh.ServeHTTPCalled = true
+}
+
 func init() {
 	paramSt = paramStruct{Testparam1: "testval1",
 		Testparam2: "true"}
@@ -41,8 +49,8 @@ var _ = Describe("MustParamsGET", func() {
 		w       *httptest.ResponseRecorder
 		r       *http.Request
 		h       http.Handler
-		urlVals *url.Values         // use for query or form values
-		mHand   func() http.Handler // mock handler
+		urlVals *url.Values  // use for query or form values
+		mHand   *mockHandler // mock handler
 
 		behav bdts.TestHTTPRespCodeAndBody
 
@@ -51,12 +59,7 @@ var _ = Describe("MustParamsGET", func() {
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
-		mHand = func() http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("wrapped handler response"))
-			})
-		}
+		mHand = &mockHandler{}
 		tParams = paramMap     // default params to set in query
 		tParamKeys = paramKeys // default params to check
 		urlVals = &url.Values{}
@@ -67,18 +70,17 @@ var _ = Describe("MustParamsGET", func() {
 		}
 		r = httptest.NewRequest("GET", "/register", nil)
 		r.URL.RawQuery = urlVals.Encode()
-		h = mw.MustParamsGET(mHand(), tParamKeys...)
+		h = mw.MustParamsGET(mHand, tParamKeys...)
 		h.ServeHTTP(w, r)
 	})
 	Context("params are present", func() {
 		BeforeEach(func() {
 			tParams = paramMap
 			tParamKeys = paramKeys
-			behav = bdts.TestHTTPRespCodeAndBody{
-				W: w, Code: 200, Body: "wrapped handler response"}
 		})
-		It("returns StatusOK", bdts.AssertStatusCode(&behav))
-		It("returns wrapped handler response", bdts.AssertRespBody(&behav))
+		It("calls ServeHTTP of wrapped handler", func() {
+			Expect(mHand.ServeHTTPCalled).To(Equal(true))
+		})
 	})
 	Context("params are missing", func() {
 		BeforeEach(func() {
@@ -92,30 +94,25 @@ var _ = Describe("MustParamsGET", func() {
 		It("returns MISSING_ARG response", bdts.AssertRespBodyContains(&behav))
 	})
 })
-var _ = Describe("MustParamsPOST", func() {
+var _ = FDescribe("MustParamsPOST", func() {
 	var (
 		w       *httptest.ResponseRecorder
 		r       *http.Request
 		h       http.Handler
-		urlVals *url.Values         // use for query or form values
-		mHand   func() http.Handler // mock handler
+		urlVals *url.Values  // use for query or form values
+		mHand   *mockHandler // mock handler
 
 		behav bdts.TestHTTPRespCodeAndBody
 
-		tParams   map[string]string // test params
-		tParamStr paramStruct
+		tParams  map[string]string // test params
+		tParamSt paramStruct
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
-		mHand = func() http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("wrapped handler response"))
-			})
-		}
+		mHand = &mockHandler{}
 		urlVals = &url.Values{}
-		tParams = paramMap  // default params to set in query
-		tParamStr = paramSt // default params to check
+		tParams = paramMap // default params to set in query
+		tParamSt = paramSt // default params to check
 	})
 	JustBeforeEach(func() {
 		for k, v := range tParams {
@@ -123,18 +120,17 @@ var _ = Describe("MustParamsPOST", func() {
 		}
 		r = httptest.NewRequest("POST", "/register", strings.NewReader(urlVals.Encode()))
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		h = mw.MustParamsPOST(mHand(), tParamStr)
+		h = mw.MustParamsPOST(mHand, tParamSt)
 		h.ServeHTTP(w, r)
 	})
 	Context("params are present", func() {
 		BeforeEach(func() {
 			tParams = paramMap
-			tParamStr = paramSt
-			behav = bdts.TestHTTPRespCodeAndBody{
-				W: w, Code: 200, Body: "wrapped handler response"}
+			tParamSt = paramSt
 		})
-		It("returns StatusOK", bdts.AssertStatusCode(&behav))
-		It("returns wrapped handler response", bdts.AssertRespBody(&behav))
+		It("calls ServeHTTP of wrapped handler", func() {
+			Expect(mHand.ServeHTTPCalled).To(Equal(true))
+		})
 	})
 	Context("params are missing", func() {
 		BeforeEach(func() {
@@ -156,7 +152,7 @@ var _ = Describe("MustParamsPOST", func() {
 				Expect(r).NotTo(BeNil())
 				Expect(r).To(Equal("Wrong type: accept struct only"))
 			}()
-			h = mw.MustParamsPOST(mHand(), paramMap)
+			h = mw.MustParamsPOST(mHand, paramMap)
 			h.ServeHTTP(w, r)
 		})
 	})
