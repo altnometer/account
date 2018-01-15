@@ -94,7 +94,7 @@ var _ = Describe("MustParamsGET", func() {
 		It("returns MISSING_ARG response", bdts.AssertRespBodyContains(&behav))
 	})
 })
-var _ = FDescribe("MustParamsPOST", func() {
+var _ = Describe("MustParamsPOST", func() {
 	var (
 		w       *httptest.ResponseRecorder
 		r       *http.Request
