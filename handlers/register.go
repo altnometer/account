@@ -144,16 +144,16 @@ var CheckPasswordHash = func(pwd, hash string) bool {
 }
 
 func checkUNameLength(uname string) error {
-	if utf8.RuneCountInString(uname) > MaxUserNameLength {
+	if utf8.RuneCountInString(uname) > model.MaxUserNameLength {
 		return errors.New("ARG_NAME_TOO_LONG")
 	}
 	return nil
 }
 func checkPWDLength(pwd string) error {
-	if utf8.RuneCountInString(pwd) > MaxPasswordLength {
+	if utf8.RuneCountInString(pwd) > model.MaxPasswordLength {
 		return errors.New("ARG_PWD_TOO_LONG")
 	}
-	if utf8.RuneCountInString(pwd) < MinPasswordLength {
+	if utf8.RuneCountInString(pwd) < model.MinPasswordLength {
 		return errors.New("ARG_PWD_TOO_SHORT")
 	}
 	return nil
@@ -171,7 +171,7 @@ func checkNewLineChars(uname string) error {
 	return nil
 }
 func checkReservedUnames(uname string) error {
-	for _, n := range ReservedUsernames {
+	for _, n := range model.ReservedUsernames {
 		if strings.Contains(uname, n) {
 			return errors.New("ARG_NAME_NO_RESERVED_UNAMES_ALLOWED")
 		}

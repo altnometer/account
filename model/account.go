@@ -2,6 +2,22 @@ package model
 
 import "sync"
 
+// MaxUserNameLength limits username length in characters.
+const MaxUserNameLength = 32
+
+// MaxPasswordLength limits pwd length in characters.
+const MaxPasswordLength = 128
+
+// MinPasswordLength limits pwd length in characters.
+const MinPasswordLength = 6
+
+// ReservedUsernames must not be part of a usernames.
+var ReservedUsernames = [...]string{
+	"admin",
+	"redmoo",
+	"supervisor",
+}
+
 // RegForm holds field names for a register form.
 type RegForm struct{ Name, Pwd, PwdConf string }
 
