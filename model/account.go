@@ -6,7 +6,7 @@ import "sync"
 type Account struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
-	Pwd  string `json:"pwd"`
+	PwdHash  string `json:"pwd"`
 }
 
 type uNameSet struct {

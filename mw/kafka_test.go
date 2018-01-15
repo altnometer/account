@@ -32,7 +32,7 @@ var _ = Describe("WithKafkaProducer", func() {
 		name = "unameЯйцоЖЭ"
 		uid = "1234"
 		pwd = "ka88dk;ad"
-		acc = model.Account{ID: uid, Name: name, Pwd: pwd}
+		acc = model.Account{ID: uid, Name: name, PwdHash: pwd}
 
 		m = mocks.KafkaSyncProducer{}
 		m.SendAccMsgCall.Receives.Acc = &acc
@@ -93,7 +93,7 @@ var _ = Describe("WithKafkaProducer", func() {
 			Expect(ok).To(Equal(true))
 			Expect(mkp.SendAccMsgCall.Receives.Acc.ID).To(Equal(acc.ID))
 			Expect(mkp.SendAccMsgCall.Receives.Acc.Name).To(Equal(acc.Name))
-			Expect(mkp.SendAccMsgCall.Receives.Acc.Pwd).To(Equal(acc.Pwd))
+			Expect(mkp.SendAccMsgCall.Receives.Acc.PwdHash).To(Equal(acc.PwdHash))
 		})
 	})
 	Context("when InitMySyncProducer returns and error", func() {

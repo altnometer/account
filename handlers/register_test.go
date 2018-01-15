@@ -58,7 +58,7 @@ var _ = Describe("Register", func() {
 		uid = "1234"
 		pwd = "ka88dk;ad"
 		u = user{name: name, pwd: pwd}
-		acc = model.Account{ID: uid, Name: name, Pwd: pwd}
+		acc = model.Account{ID: uid, Name: name, PwdHash: pwd}
 
 		mp = mocks.KafkaSyncProducer{}
 		mp.SendAccMsgCall.Returns.Error = nil
@@ -97,7 +97,7 @@ var _ = Describe("Register", func() {
 				Expect(ok).To(Equal(true))
 				Expect(mkp.SendAccMsgCall.Receives.Acc.Name).To(Equal(acc.Name))
 				Expect(mkp.SendAccMsgCall.Receives.Acc.ID).To(Equal(acc.ID))
-				Expect(mkp.SendAccMsgCall.Receives.Acc.Pwd).To(Equal(acc.Pwd))
+				Expect(mkp.SendAccMsgCall.Receives.Acc.PwdHash).To(Equal(acc.PwdHash))
 			})
 		})
 		Context("falls to send msg", func() {

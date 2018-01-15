@@ -92,7 +92,7 @@ func getAccData(r *http.Request) (*model.Account, int, error) {
 	acc := &model.Account{
 		ID:   id,
 		Name: fVals.name,
-		Pwd:  string(hashedPwd),
+		PwdHash:  string(hashedPwd),
 	}
 	return acc, 200, nil
 }
