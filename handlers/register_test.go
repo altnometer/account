@@ -119,33 +119,6 @@ var _ = Describe("Register", func() {
 		})
 	})
 	Describe("invalid user details", func() {
-		Context("with missing username", func() {
-			BeforeEach(func() {
-				u = user{name: "", pwd: pwd}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "NO_ARG_NAME"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("with missing password", func() {
-			BeforeEach(func() {
-				u = user{name: name, pwd: ""}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "NO_ARG_PWD"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("with missing username and password ", func() {
-			BeforeEach(func() {
-				u = user{name: "", pwd: ""}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "NO_ARG_NAME"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
 		Context("when username already exists", func() {
 			BeforeEach(func() {
 				model.UNameExists = func(string) bool {

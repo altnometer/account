@@ -90,9 +90,9 @@ func getAccData(r *http.Request) (*model.Account, int, error) {
 	}
 
 	acc := &model.Account{
-		ID:   id,
-		Name: fVals.name,
-		PwdHash:  string(hashedPwd),
+		ID:      id,
+		Name:    fVals.name,
+		PwdHash: string(hashedPwd),
 	}
 	return acc, 200, nil
 }
@@ -102,12 +102,8 @@ func getFormVals(r *http.Request) (*formVals, int, error) {
 		name string
 		pwd  string
 	)
-	if name = r.PostFormValue("name"); name == "" {
-		return nil, 400, errors.New("NO_ARG_NAME")
-	}
-	if pwd = r.PostFormValue("pwd"); pwd == "" {
-		return nil, 400, errors.New("NO_ARG_PWD")
-	}
+	name = r.PostFormValue("name")
+	pwd = r.PostFormValue("pwd")
 	return &formVals{name, pwd}, 200, nil
 
 }
