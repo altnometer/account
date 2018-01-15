@@ -5,8 +5,8 @@ import (
 	"reflect"
 )
 
-// MustParamsGET checks params in a GET request. If present, calls wrapped
-// http.Hanlder. If not, returns an error response.
+// MustParamsGET checks params in a GET request. If present, calls
+// ServeHTTP() of a wrapped handler. If not, returns an error response.
 func MustParamsGET(h http.Handler, params ...string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -23,7 +23,7 @@ func MustParamsGET(h http.Handler, params ...string) http.Handler {
 }
 
 // MustParamsPOST checks params in a POST request. If present, calls wrapped
-// http.Hanlder. If not, returns an error response.
+// ServeHTTP() of a wrapped handler. If not, returns an error response.
 func MustParamsPOST(h http.Handler, params interface{}) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
