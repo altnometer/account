@@ -2,11 +2,14 @@ package model
 
 import "sync"
 
+// RegForm holds field names for a register form.
+type RegForm struct{ Name, Pwd, PwdConf string }
+
 // Account holds core user details.
 type Account struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	PwdHash  string `json:"pwd"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	PwdHash string `json:"pwd"`
 }
 
 type uNameSet struct {
