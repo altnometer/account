@@ -132,7 +132,7 @@ var _ = Describe("Register", func() {
 		})
 		Context("username contains a reserved name", func() {
 			rand.Seed(time.Now().Unix())
-			rns := handlers.ReservedUsernames
+			rns := model.ReservedUsernames
 			uname := fmt.Sprintf("z%sж", rns[rand.Intn(len(rns)-1)])
 			// uname := rns[rand.Intn(len(rns)-1)]
 			BeforeEach(func() {
@@ -174,7 +174,7 @@ var _ = Describe("Register", func() {
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
 		Context("password exceeds max length", func() {
-			pwd := strings.Repeat("й", handlers.MaxPasswordLength+1)
+			pwd := strings.Repeat("й", model.MaxPasswordLength+1)
 			BeforeEach(func() {
 				u = user{name: name, pwd: pwd}
 				behav = bdts.TestHTTPRespCodeAndBody{
