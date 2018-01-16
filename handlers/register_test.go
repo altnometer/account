@@ -184,7 +184,7 @@ var _ = Describe("Register", func() {
 			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
 		Context("password is less than min length", func() {
-			pwd := strings.Repeat("й", handlers.MinPasswordLength-1)
+			pwd := strings.Repeat("й", model.MinPasswordLength-1)
 			BeforeEach(func() {
 				u = user{name: name, pwd: pwd}
 				behav = bdts.TestHTTPRespCodeAndBody{
