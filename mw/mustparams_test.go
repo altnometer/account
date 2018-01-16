@@ -37,7 +37,7 @@ func init() {
 	paramKeys = make([]string, v.NumField())
 	paramMap = make(map[string]string)
 	for i := 0; i < v.NumField(); i++ {
-		fName := v.Field(i).Type().Name()
+		fName := v.Type().Field(i).Name
 		fVal := v.Field(i).Interface().(string)
 		paramKeys[i] = fName
 		paramMap[fName] = fVal
