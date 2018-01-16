@@ -18,8 +18,22 @@ var ReservedUsernames = [...]string{
 	"supervisor",
 }
 
+// FormOKer implements OK method.
+type FormOKer interface {
+	OK() (int, error)
+}
+
 // RegForm holds field names for a register form.
-type RegForm struct{ Name, Pwd, PwdConf string }
+type RegForm struct {
+	Name    string `json:"name"`
+	Pwd     string `json:"pwd"`
+	PwdConf string `json:"pwd_conf"`
+}
+
+// OK checks form fields and returns a status code and error.
+func (f *RegForm) OK() (int, error) {
+	return 200, nil
+}
 
 // Account holds core user details.
 type Account struct {
