@@ -31,7 +31,7 @@ func MustParamsPOST(h http.Handler, params interface{}) http.Handler {
 		switch v.Kind() {
 		case reflect.Struct:
 			for i := 0; i < v.NumField(); i++ {
-				fName := v.Field(i).Type().Name()
+				fName := v.Type().Field(i).Name
 				if len(r.PostFormValue(fName)) == 0 {
 					http.Error(w, "MISSING_ARG "+fName, http.StatusBadRequest)
 					return // exit early
