@@ -132,6 +132,17 @@ var _ = Describe("MustParamsPOST", func() {
 			Expect(mHand.ServeHTTPCalled).To(Equal(true))
 		})
 	})
+	Context("params arg is a struct pointer", func() {
+		BeforeEach(func() {
+			tParams = paramMap
+			tParamSt = paramSt
+		})
+		It("calls ServeHTTP of wrapped handler", func() {
+			h = mw.MustParamsPOST(mHand, &tParamSt)
+			h.ServeHTTP(w, r)
+			Expect(mHand.ServeHTTPCalled).To(Equal(true))
+		})
+	})
 	Context("params are missing", func() {
 		BeforeEach(func() {
 			tParams = map[string]string{}
@@ -150,7 +161,7 @@ var _ = Describe("MustParamsPOST", func() {
 			defer func() {
 				r := recover()
 				Expect(r).NotTo(BeNil())
-				Expect(r).To(Equal("Wrong type: accept struct only"))
+				Expect(r).Should(ContainSubstring("Wrong type"))
 			}()
 			h = mw.MustParamsPOST(mHand, paramMap)
 			h.ServeHTTP(w, r)

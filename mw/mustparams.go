@@ -28,6 +28,9 @@ func MustParamsPOST(h http.Handler, params interface{}) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		v := reflect.ValueOf(params)
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
 		switch v.Kind() {
 		case reflect.Struct:
 			for i := 0; i < v.NumField(); i++ {
@@ -38,7 +41,7 @@ func MustParamsPOST(h http.Handler, params interface{}) http.Handler {
 				}
 			}
 		default:
-			panic("Wrong type: accept struct only")
+			panic("Wrong type. Accept a struct or a struct pointer.")
 
 		}
 		h.ServeHTTP(w, r) // all params present, proceed
