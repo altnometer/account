@@ -2,13 +2,10 @@ package handlers_test
 
 import (
 	"errors"
-	"fmt"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/altnometer/account/common/bdts"
 	"github.com/altnometer/account/handlers"
@@ -39,11 +36,10 @@ var _ = Describe("Register", func() {
 		u    user // config user data for tests
 		acc  model.Account
 
-		withKP            = mw.WithKafkaProducer
-		behav             bdts.TestHTTPRespCodeAndBody
-		hasherBefore      func(pwd string) (string, error)
-		uNameExistsBefore func(name string) bool
-		makeUIDBefore     func() (string, error)
+		withKP        = mw.WithKafkaProducer
+		behav         bdts.TestHTTPRespCodeAndBody
+		hasherBefore  func(pwd string) (string, error)
+		makeUIDBefore func() (string, error)
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
@@ -65,7 +61,6 @@ var _ = Describe("Register", func() {
 		mp.InitMySyncProducerCall.Returns.Error = nil
 		iKP = &mp
 		hasherBefore = handlers.HashPassword
-		uNameExistsBefore = model.UNameExists
 		handlers.HashPassword = func(pwd string) (string, error) {
 			return pwd, nil
 		}
@@ -76,7 +71,6 @@ var _ = Describe("Register", func() {
 	})
 	AfterEach(func() {
 		handlers.HashPassword = hasherBefore
-		model.UNameExists = uNameExistsBefore
 		handlers.MakeUID = makeUIDBefore
 
 	})
@@ -116,82 +110,6 @@ var _ = Describe("Register", func() {
 			newUrl, err := w.Result().Location()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(newUrl.Path).To(Equal(h.RedirectURL))
-		})
-	})
-	Describe("invalid user details", func() {
-		Context("when username already exists", func() {
-			BeforeEach(func() {
-				model.UNameExists = func(string) bool {
-					return true
-				}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "NAME_ALREADY_EXISTS"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("username contains a reserved name", func() {
-			rand.Seed(time.Now().Unix())
-			rns := model.ReservedUsernames
-			uname := fmt.Sprintf("z%sж", rns[rand.Intn(len(rns)-1)])
-			// uname := rns[rand.Intn(len(rns)-1)]
-			BeforeEach(func() {
-				u = user{name: uname, pwd: pwd}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "ARG_NAME_NO_RESERVED_UNAMES_ALLOWED"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("username exceeds max length", func() {
-			uname := strings.Repeat("й", handlers.MaxUserNameLength+1)
-			BeforeEach(func() {
-				u = user{name: uname, pwd: pwd}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "ARG_NAME_TOO_LONG"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("username is an invalid utf8 string", func() {
-			uname := "zйфж\xbd"
-			BeforeEach(func() {
-				u = user{name: uname, pwd: pwd}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "ARG_NAME_INVALID_UTF8_STRING"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("username contains new line char", func() {
-			uname := "zйфж\n"
-			BeforeEach(func() {
-				u = user{name: uname, pwd: pwd}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "ARG_NAME_NO_NEWLINE_ALLOWED"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("password exceeds max length", func() {
-			pwd := strings.Repeat("й", model.MaxPasswordLength+1)
-			BeforeEach(func() {
-				u = user{name: name, pwd: pwd}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "ARG_PWD_TOO_LONG"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
-		})
-		Context("password is less than min length", func() {
-			pwd := strings.Repeat("й", model.MinPasswordLength-1)
-			BeforeEach(func() {
-				u = user{name: name, pwd: pwd}
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 400, Body: "ARG_PWD_TOO_SHORT"}
-			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBody(&behav))
 		})
 	})
 	Describe("No kafka producer is passed by middleware", func() {
