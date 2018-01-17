@@ -36,11 +36,6 @@ type Register struct {
 	StatusCode  int
 }
 
-type formVals struct {
-	name string
-	pwd  string
-}
-
 // Register handles an HTTP request to register a user.
 func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// fVals, code, err := getFormVals(r)
@@ -56,11 +51,9 @@ func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, reg.RedirectURL, reg.StatusCode)
 }
 func getAccData(r *http.Request) (*model.Account, int, error) {
-	fVals, code, err := getFormVals(r)
-	if err != nil {
-		return nil, code, err
-	}
-	hashedPwd, err := HashPassword(fVals.pwd)
+	name := r.PostFormValue("name")
+	pwd := r.PostFormValue("pwd")
+	hashedPwd, err := HashPassword(pwd)
 	if err != nil {
 		return nil, 500, err
 	}
@@ -71,22 +64,12 @@ func getAccData(r *http.Request) (*model.Account, int, error) {
 
 	acc := &model.Account{
 		ID:      id,
-		Name:    fVals.name,
+		Name:    name,
 		PwdHash: string(hashedPwd),
 	}
 	return acc, 200, nil
 }
 
-func getFormVals(r *http.Request) (*formVals, int, error) {
-	var (
-		name string
-		pwd  string
-	)
-	name = r.PostFormValue("name")
-	pwd = r.PostFormValue("pwd")
-	return &formVals{name, pwd}, 200, nil
-
-}
 func sendAccKafkaMsg(acc *model.Account, r *http.Request) (int, error) {
 	k, ok := context.GetOk(r, "kfkProdr")
 	if !ok {
