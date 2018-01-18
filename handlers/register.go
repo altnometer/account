@@ -14,22 +14,6 @@ import (
 	"github.com/gorilla/context"
 )
 
-// MaxUserNameLength limits username length in characters.
-const MaxUserNameLength = 32
-
-// MaxPasswordLength limits pwd length in characters.
-const MaxPasswordLength = 128
-
-// MinPasswordLength limits pwd length in characters.
-const MinPasswordLength = 6
-
-// ReservedUsernames must not be part of a usernames.
-var ReservedUsernames = [...]string{
-	"admin",
-	"redmoo",
-	"supervisor",
-}
-
 // Register holds data used in ServeHTTP method for user registration.
 type Register struct {
 	RedirectURL string
