@@ -1,12 +1,49 @@
 package model
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/satori/uuid"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 // Account holds core user details.
 type Account struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
 	PwdHash string `json:"pwd"`
+}
+
+// NewAcc returns a Account instance
+var NewAcc = func(name, pwd string) (*Account, error) {
+	acc := Account{Name: name}
+	if err := acc.initPwdHash(pwd); err != nil {
+		return nil, err
+	}
+	if err := acc.initUID(); err != nil {
+		return nil, err
+	}
+	return &acc, nil
+}
+
+func (a *Account) initPwdHash(pwd string) error {
+	bytes, err := bcrypt.GenerateFromPassword(
+		[]byte(pwd), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	a.PwdHash = string(bytes)
+	return nil
+}
+
+func (a *Account) initUID() error {
+	idUUIDObj, err := uuid.NewV4()
+	if err != nil {
+		return err
+	}
+	a.ID = idUUIDObj.String()
+	return nil
 }
 
 type uNameSet struct {
