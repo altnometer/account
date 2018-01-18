@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/altnometer/account/common/bdts"
 	"github.com/altnometer/account/handlers"
 	"github.com/altnometer/account/kafka"
 	"github.com/altnometer/account/mocks"
@@ -34,7 +33,6 @@ var _ = Describe("Register", func() {
 		acc  model.Account
 
 		withKP       = mw.WithKafkaProducer
-		behav        bdts.TestHTTPRespCodeAndBody
 		NewAccBefore func(name, pwd string) (*model.Account, error)
 	)
 	BeforeEach(func() {
@@ -84,11 +82,11 @@ var _ = Describe("Register", func() {
 		Context("falls to send msg", func() {
 			BeforeEach(func() {
 				mp.SendAccMsgCall.Returns.Error = errors.New("test error")
-				behav = bdts.TestHTTPRespCodeAndBody{
-					W: w, Code: 500, Body: "FAILED_KAFKA_MSG_SEND"}
 			})
-			It("returns correct status code", bdts.AssertStatusCode(&behav))
-			It("returns correct err msg", bdts.AssertRespBodyContains(&behav))
+			It("returns and err response", func() {
+				Expect(w.Body.String()).To(ContainSubstring("FAILED_KAFKA_MSG_SEND"))
+				Expect(w.Code).To(Equal(500))
+			})
 		})
 	})
 	Describe("valid user details", func() {
@@ -106,11 +104,11 @@ var _ = Describe("Register", func() {
 			withKP = func(_ kafka.ISyncProducer, h http.Handler) http.Handler {
 				return h
 			}
-			behav = bdts.TestHTTPRespCodeAndBody{
-				W: w, Code: 500, Body: "NO_KAFKA_PRODUCER_IN_CONTEXT"}
 		})
-		It("returns correct status code", bdts.AssertStatusCode(&behav))
-		It("returns correct err msg", bdts.AssertRespBody(&behav))
+		It("returns and error response", func() {
+			Expect(w.Code).To(Equal(500))
+			Expect(w.Body.String()).To(ContainSubstring("NO_KAFKA_PRODUCER_IN_CONTEXT"))
+		})
 
 	})
 	Describe("creating Acc instanc fails", func() {
