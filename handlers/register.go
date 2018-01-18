@@ -35,22 +35,14 @@ func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, reg.RedirectURL, reg.StatusCode)
 }
 func getAccData(r *http.Request) (*model.Account, int, error) {
-	name := r.PostFormValue("name")
-	pwd := r.PostFormValue("pwd")
-	hashedPwd, err := HashPassword(pwd)
-	if err != nil {
-		return nil, 500, err
-	}
-	id, err := MakeUID()
+	acc, err := model.NewAcc(
+		r.PostFormValue("name"),
+		r.PostFormValue("pwd"),
+	)
 	if err != nil {
 		return nil, 500, err
 	}
 
-	acc := &model.Account{
-		ID:      id,
-		Name:    name,
-		PwdHash: string(hashedPwd),
-	}
 	return acc, 200, nil
 }
 
