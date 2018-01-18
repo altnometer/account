@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/altnometer/account/kafka"
 	"github.com/altnometer/account/model"
 
@@ -21,10 +19,12 @@ type Register struct {
 
 // Register handles an HTTP request to register a user.
 func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// fVals, code, err := getFormVals(r)
-	accData, code, err := getAccData(r)
+	accData, err := model.NewAcc(
+		r.PostFormValue("name"),
+		r.PostFormValue("pwd"),
+	)
 	if err != nil {
-		http.Error(w, err.Error(), code)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 	if code, err := sendAccKafkaMsg(accData, r); err != nil {
@@ -32,17 +32,6 @@ func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, reg.RedirectURL, reg.StatusCode)
-}
-func getAccData(r *http.Request) (*model.Account, int, error) {
-	acc, err := model.NewAcc(
-		r.PostFormValue("name"),
-		r.PostFormValue("pwd"),
-	)
-	if err != nil {
-		return nil, 500, err
-	}
-
-	return acc, 200, nil
 }
 
 func sendAccKafkaMsg(acc *model.Account, r *http.Request) (int, error) {
