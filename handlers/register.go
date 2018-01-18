@@ -19,10 +19,14 @@ type Register struct {
 
 // Register handles an HTTP request to register a user.
 func (reg *Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	accData, err := model.NewAcc(
-		r.PostFormValue("name"),
-		r.PostFormValue("pwd"),
-	)
+	name := r.PostFormValue("Name")
+	pwd := r.PostFormValue("Pwd")
+	if len(name) == 0 || len(pwd) == 0 {
+		// okregform middleware would not let this panic happen.
+		// it only checks that unit tests naming is valid.
+		panic("No name or pwd args in register form")
+	}
+	accData, err := model.NewAcc(name, pwd)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return

@@ -62,8 +62,8 @@ var _ = Describe("Register", func() {
 
 	})
 	JustBeforeEach(func() {
-		f.Add("name", name)
-		f.Add("pwd", pwd)
+		f.Add("Name", name)
+		f.Add("Pwd", pwd)
 		r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		wh = withKP(iKP, h) // wh - wrapped handler
