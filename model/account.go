@@ -46,6 +46,12 @@ func (a *Account) initUID() error {
 	return nil
 }
 
+// CheckPwdHash compares submitted password with stored hash.
+func (a *Account) CheckPwdHash(pwd string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(a.PwdHash), []byte(pwd))
+	return err == nil
+}
+
 type uNameSet struct {
 	sync.RWMutex
 	m map[string]struct{}

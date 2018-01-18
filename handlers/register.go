@@ -56,9 +56,3 @@ func sendAccKafkaMsg(acc *model.Account, r *http.Request) (int, error) {
 	}
 	return 200, nil
 }
-
-// CheckPasswordHash compares submited password with stored hash.
-var CheckPasswordHash = func(pwd, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(pwd))
-	return err == nil
-}
