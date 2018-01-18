@@ -19,7 +19,6 @@ import (
 )
 
 var _ = Describe("Register", func() {
-	type user struct{ name, pwd string }
 	var (
 		w   *httptest.ResponseRecorder
 		r   *http.Request
@@ -27,56 +26,44 @@ var _ = Describe("Register", func() {
 		h   *handlers.Register // handler struct under test
 		iKP kafka.ISyncProducer
 		wh  http.Handler // wrapped handler
-		m   mocks.BoltClient
 		mp  mocks.KafkaSyncProducer
 
 		name string
 		pwd  string
 		uid  string
-		u    user // config user data for tests
 		acc  model.Account
 
-		withKP        = mw.WithKafkaProducer
-		behav         bdts.TestHTTPRespCodeAndBody
-		hasherBefore  func(pwd string) (string, error)
-		makeUIDBefore func() (string, error)
+		withKP       = mw.WithKafkaProducer
+		behav        bdts.TestHTTPRespCodeAndBody
+		NewAccBefore func(name, pwd string) (*model.Account, error)
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
 		h = &handlers.Register{RedirectURL: "/", StatusCode: 302}
 		f = &url.Values{}
 
-		m = mocks.BoltClient{}
-		m.GetCall.Returns.ID = []byte("")
-		m.GetCall.Returns.Error = nil
-
 		name = "unameЯйцоЖЭ"
 		uid = "1234"
 		pwd = "ka88dk;ad"
-		u = user{name: name, pwd: pwd}
 		acc = model.Account{ID: uid, Name: name, PwdHash: pwd}
 
 		mp = mocks.KafkaSyncProducer{}
 		mp.SendAccMsgCall.Returns.Error = nil
 		mp.InitMySyncProducerCall.Returns.Error = nil
 		iKP = &mp
-		hasherBefore = handlers.HashPassword
-		handlers.HashPassword = func(pwd string) (string, error) {
-			return pwd, nil
-		}
-		handlers.MakeUID = func() (string, error) {
-			return uid, nil
+		NewAccBefore = model.NewAcc
+		model.NewAcc = func(name, pwd string) (*model.Account, error) {
+			return &acc, nil
 		}
 
 	})
 	AfterEach(func() {
-		handlers.HashPassword = hasherBefore
-		handlers.MakeUID = makeUIDBefore
+		model.NewAcc = NewAccBefore
 
 	})
 	JustBeforeEach(func() {
-		f.Add("name", u.name)
-		f.Add("pwd", u.pwd)
+		f.Add("name", name)
+		f.Add("pwd", pwd)
 		r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		wh = withKP(iKP, h) // wh - wrapped handler
@@ -126,16 +113,15 @@ var _ = Describe("Register", func() {
 		It("returns correct err msg", bdts.AssertRespBody(&behav))
 
 	})
-	Describe("password hasher fails", func() {
+	Describe("creating Acc instanc fails", func() {
 		BeforeEach(func() {
-			handlers.HashPassword = func(pwd string) (string, error) {
-				return "", errors.New(behav.Body)
+			model.NewAcc = func(name, pwd string) (*model.Account, error) {
+				return nil, errors.New("mock error")
 			}
-			handlers.HashPassword("hams")
-			behav = bdts.TestHTTPRespCodeAndBody{
-				W: w, Code: 500, Body: "password hasher failed"}
 		})
-		It("returns correct status code", bdts.AssertStatusCode(&behav))
-		It("returns correct err msg", bdts.AssertRespBody(&behav))
+		It("returns and error response", func() {
+			Expect(w.Code).To(Equal(500))
+			Expect(w.Body.String()).To(ContainSubstring("mock error"))
+		})
 	})
 })
