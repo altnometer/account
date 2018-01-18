@@ -9,7 +9,6 @@ import (
 
 	"github.com/altnometer/account/kafka"
 	"github.com/altnometer/account/model"
-	"github.com/satori/uuid"
 
 	"github.com/gorilla/context"
 )
@@ -56,24 +55,6 @@ func sendAccKafkaMsg(acc *model.Account, r *http.Request) (int, error) {
 		return 500, fmt.Errorf("FAILED_KAFKA_MSG_SEND: %s", err.Error())
 	}
 	return 200, nil
-}
-
-// HashPassword hashes submitted password.
-var HashPassword = func(pwd string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword(
-		[]byte(pwd), bcrypt.DefaultCost)
-	return string(bytes), err
-}
-
-// MakeUID creates a new user id.
-var MakeUID = func() (string, error) {
-	idUUIDObj, err := uuid.NewV4()
-	if err != nil {
-		return "", err
-	}
-	id := idUUIDObj.String()
-	return id, nil
-
 }
 
 // CheckPasswordHash compares submited password with stored hash.
