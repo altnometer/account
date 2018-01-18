@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/altnometer/account/common/bdts"
 	"github.com/altnometer/account/mw"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -52,8 +51,6 @@ var _ = Describe("MustParamsGET", func() {
 		urlVals *url.Values  // use for query or form values
 		mHand   *mockHandler // mock handler
 
-		behav bdts.TestHTTPRespCodeAndBody
-
 		tParams    map[string]string // test params
 		tParamKeys []string
 	)
@@ -86,12 +83,11 @@ var _ = Describe("MustParamsGET", func() {
 		BeforeEach(func() {
 			tParams = map[string]string{}
 			tParamKeys = paramKeys
-			behav = bdts.TestHTTPRespCodeAndBody{
-				W: w, Code: http.StatusBadRequest,
-				Body: "MISSING_ARG"}
 		})
-		It("returns StatusBadRequest", bdts.AssertStatusCode(&behav))
-		It("returns MISSING_ARG response", bdts.AssertRespBodyContains(&behav))
+		It("returns an err response", func() {
+			Expect(w.Code).To(Equal(400))
+			Expect(w.Body.String()).To(ContainSubstring("MISSING_ARG"))
+		})
 	})
 })
 var _ = Describe("MustParamsPOST", func() {
@@ -101,8 +97,6 @@ var _ = Describe("MustParamsPOST", func() {
 		h       http.Handler
 		urlVals *url.Values  // use for query or form values
 		mHand   *mockHandler // mock handler
-
-		behav bdts.TestHTTPRespCodeAndBody
 
 		tParams  map[string]string // test params
 		tParamSt paramStruct
@@ -146,12 +140,11 @@ var _ = Describe("MustParamsPOST", func() {
 	Context("params are missing", func() {
 		BeforeEach(func() {
 			tParams = map[string]string{}
-			behav = bdts.TestHTTPRespCodeAndBody{
-				W: w, Code: http.StatusBadRequest,
-				Body: "MISSING_ARG"}
 		})
-		It("returns StatusBadRequest", bdts.AssertStatusCode(&behav))
-		It("returns MISSING_ARG response", bdts.AssertRespBodyContains(&behav))
+		It("returns an err response", func() {
+			Expect(w.Code).To(Equal(400))
+			Expect(w.Body.String()).To(ContainSubstring("MISSING_ARG"))
+		})
 	})
 	Context("arg to fn is  not of type struct", func() {
 		BeforeEach(func() {
