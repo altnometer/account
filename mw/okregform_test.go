@@ -59,7 +59,6 @@ var _ = Describe("OKRegForm", func() {
 		h       http.Handler
 		urlVals *url.Values        // use for query or form values
 		mHand   *wrapItByOKRegForm // mock handler
-		// behav   bdts.TestHTTPRespCodeAndBody
 
 		tParams map[string]string // test params
 	)
