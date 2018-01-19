@@ -23,17 +23,10 @@ var _ = Describe("WithKafkaProducer", func() {
 		m     mocks.KafkaSyncProducer
 		mHand func() http.Handler // mock handler
 		acc   model.Account
-
-		name string
-		uid  string
-		pwd  string // encrypted pwd
 	)
 	BeforeEach(func() {
-		name = "unameЯйцоЖЭ"
-		uid = "1234"
-		pwd = "ka88dk;ad"
-		acc = model.Account{ID: uid, Name: name, PwdHash: pwd}
-
+		acc = model.Account{
+			ID: "1234", Name: "unameЯйцоЖЭ", PwdHash: "ka88dk;ad"}
 		m = mocks.KafkaSyncProducer{}
 		m.SendAccMsgCall.Receives.Acc = &acc
 		m.SendAccMsgCall.Returns.Error = nil
