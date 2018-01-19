@@ -96,7 +96,7 @@ var _ = Describe("WithKafkaProducer", func() {
 				fn := func(w http.ResponseWriter, r *http.Request) {
 					_, ok := context.GetOk(r, "kfkProdr")
 					if !ok {
-						errors.New("failed to kafka SyncProducer from context")
+						errors.New("failed to get kafka SyncProducer from context")
 					}
 				}
 				return http.HandlerFunc(fn)
