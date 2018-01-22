@@ -14,18 +14,6 @@ type KafkaSyncProducer struct {
 			Error error
 		}
 	}
-	InitMySyncProducerCall struct {
-		Returns struct {
-			Error error
-		}
-	}
-	InitMySyncProducerCalled bool
-}
-
-// InitMySyncProducer is a mock method for KafkaSyncProducer.
-func (p *KafkaSyncProducer) InitMySyncProducer() error {
-	p.InitMySyncProducerCalled = true
-	return p.InitMySyncProducerCall.Returns.Error
 }
 
 // SendAccMsg is a mock method for KafkaSyncProducer.
