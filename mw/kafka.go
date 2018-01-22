@@ -1,7 +1,6 @@
 package mw
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/altnometer/account/kafka"
@@ -19,10 +18,7 @@ func (p *kafkaProdrWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // WithKafkaProducer wrapps given http.Handler and passes a kafka producer.
-var WithKafkaProducer = func(kp kafka.ISyncProducer, h http.Handler) http.Handler {
-	if err := kp.InitMySyncProducer(); err != nil {
-		fmt.Printf("Error initializing kafka SyncProducer: %s\n", err.Error())
-		panic(fmt.Sprintf("Error initializing kafka SyncProducer: %s\n", err.Error()))
-	}
-	return &kafkaProdrWrapper{prodr: kp, h: h}
+var WithKafkaProducer = func(h http.Handler) http.Handler {
+	p := kafka.NewSyncProducer()
+	return &kafkaProdrWrapper{prodr: p, h: h}
 }
