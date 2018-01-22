@@ -1,14 +1,10 @@
 package mocks
 
-import (
-	"github.com/altnometer/account/model"
-)
-
 // KafkaSyncProducer is a mock of ISyncProducer interface.
 type KafkaSyncProducer struct {
 	SendAccMsgCall struct {
 		Receives struct {
-			Acc *model.Account
+			Key, Val string
 		}
 		Returns struct {
 			Error error
@@ -17,7 +13,8 @@ type KafkaSyncProducer struct {
 }
 
 // SendAccMsg is a mock method for KafkaSyncProducer.
-func (p *KafkaSyncProducer) SendAccMsg(acc *model.Account) error {
-	p.SendAccMsgCall.Receives.Acc = acc
+func (p *KafkaSyncProducer) SendAccMsg(key, val string) error {
+	p.SendAccMsgCall.Receives.Key = key
+	p.SendAccMsgCall.Receives.Val = val
 	return p.SendAccMsgCall.Returns.Error
 }
