@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/altnometer/account/model"
@@ -17,13 +18,28 @@ import (
 // ISyncProducer interacts with kafka brokers as a producer.
 type ISyncProducer interface {
 	SendAccMsg(*model.Account) error
-	InitMySyncProducer() error
 }
 
 // SyncProducer implement ISyncProducer interface.
 type SyncProducer struct {
 	Brokers  []string
 	Producer sarama.SyncProducer
+}
+
+// SP handles sending Account messages to kafka.
+var SP *SyncProducer
+
+var once sync.Once
+
+// NewSyncProducer returns a pointer to initialized instance of SyncProducer.
+var NewSyncProducer = func() ISyncProducer {
+	once.Do(func() {
+		SP = &SyncProducer{}
+		if err := SP.initMySyncProducer(); err != nil {
+			panic(err.Error())
+		}
+	})
+	return SP
 }
 
 func (p *SyncProducer) getBrokers() error {
@@ -35,8 +51,7 @@ func (p *SyncProducer) getBrokers() error {
 	return nil
 }
 
-// InitMySyncProducer initializes kafka sync producer.
-func (p *SyncProducer) InitMySyncProducer() error {
+func (p *SyncProducer) initMySyncProducer() error {
 	if err := p.getBrokers(); err != nil {
 		return err
 	}
