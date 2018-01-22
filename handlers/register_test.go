@@ -11,29 +11,24 @@ import (
 	"github.com/altnometer/account/kafka"
 	"github.com/altnometer/account/mocks"
 	"github.com/altnometer/account/model"
-	"github.com/altnometer/account/mw"
-	"github.com/gorilla/context"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Register", func() {
 	var (
-		w   *httptest.ResponseRecorder
-		r   *http.Request
-		f   *url.Values        // form values
-		h   *handlers.Register // handler struct under test
-		iKP kafka.ISyncProducer
-		wh  http.Handler // wrapped handler
-		mp  mocks.KafkaSyncProducer
+		w *httptest.ResponseRecorder
+		r *http.Request
+		f *url.Values        // form values
+		h *handlers.Register // handler struct under test
 
-		name string
-		pwd  string
-		uid  string
-		acc  model.Account
+		name, pwd, pwdConf string
 
-		withKP       = mw.WithKafkaProducer
-		NewAccBefore func(name, pwd string) (*model.Account, error)
+		mAcc mocks.Account
+
+		NewAccBefore func(name, pwd string) (model.AccSender, error)
+		// the original fn panics if no env var is set.
+		NewSyncProdrB4 func() kafka.ISyncProducer
 	)
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
@@ -41,55 +36,34 @@ var _ = Describe("Register", func() {
 		f = &url.Values{}
 
 		name = "unameЯйцоЖЭ"
-		uid = "1234"
 		pwd = "ka88dk;ad"
-		acc = model.Account{ID: uid, Name: name, PwdHash: pwd}
+		pwdConf = "ka88dk;ad"
+		mAcc = mocks.Account{}
 
-		mp = mocks.KafkaSyncProducer{}
-		mp.SendAccMsgCall.Returns.Error = nil
-		mp.InitMySyncProducerCall.Returns.Error = nil
-		iKP = &mp
 		NewAccBefore = model.NewAcc
-		model.NewAcc = func(name, pwd string) (*model.Account, error) {
-			return &acc, nil
+		model.NewAcc = func(name, pwd string) (model.AccSender, error) {
+			return &mAcc, nil
 		}
 
+		kafka.NewSyncProducer = func() kafka.ISyncProducer {
+			mp := mocks.KafkaSyncProducer{}
+			mp.SendAccMsgCall.Returns.Error = nil
+			return &mp
+		}
 	})
 	AfterEach(func() {
 		model.NewAcc = NewAccBefore
-
+		kafka.NewSyncProducer = NewSyncProdrB4
 	})
 	JustBeforeEach(func() {
 		f.Add("Name", name)
 		f.Add("Pwd", pwd)
+		f.Add("PwdConf", pwdConf)
 		r = httptest.NewRequest("POST", "/register", strings.NewReader(f.Encode()))
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		wh = withKP(iKP, h) // wh - wrapped handler
-		wh.ServeHTTP(w, r)
+		h.ServeHTTP(w, r)
 	})
-	Describe("kafka producer", func() {
-		Context("normally", func() {
-			It("sends user Account msg", func() {
-				kp, ok := context.GetOk(r, "kfkProdr")
-				Expect(ok).To(Equal(true))
-				mkp, ok := (kp).(*mocks.KafkaSyncProducer)
-				Expect(ok).To(Equal(true))
-				Expect(mkp.SendAccMsgCall.Receives.Acc.Name).To(Equal(acc.Name))
-				Expect(mkp.SendAccMsgCall.Receives.Acc.ID).To(Equal(acc.ID))
-				Expect(mkp.SendAccMsgCall.Receives.Acc.PwdHash).To(Equal(acc.PwdHash))
-			})
-		})
-		Context("falls to send msg", func() {
-			BeforeEach(func() {
-				mp.SendAccMsgCall.Returns.Error = errors.New("test error")
-			})
-			It("returns and err response", func() {
-				Expect(w.Body.String()).To(ContainSubstring("FAILED_KAFKA_MSG_SEND"))
-				Expect(w.Code).To(Equal(500))
-			})
-		})
-	})
-	Describe("valid user details", func() {
+	Context("request is handled with no errors", func() {
 		It("redirects correctly", func() {
 			Expect(w.Code).To(Equal(h.StatusCode))
 			newUrl, err := w.Result().Location()
@@ -97,29 +71,29 @@ var _ = Describe("Register", func() {
 			Expect(newUrl.Path).To(Equal(h.RedirectURL))
 		})
 	})
-	Describe("No kafka producer is passed by middleware", func() {
-		BeforeEach(func() {
-			// this mock middleware does not passes ISyncProducer to
-			// request context which should raise and err.
-			withKP = func(_ kafka.ISyncProducer, h http.Handler) http.Handler {
-				return h
-			}
+	Context("creating Account instance succeeds", func() {
+		It("calls Acc method SendToKafka", func() {
+			Expect(mAcc.SendToKafkaCalled).To(Equal(true))
 		})
-		It("returns and error response", func() {
-			Expect(w.Code).To(Equal(500))
-			Expect(w.Body.String()).To(ContainSubstring("NO_KAFKA_PRODUCER_IN_CONTEXT"))
-		})
-
 	})
-	Describe("creating Acc instanc fails", func() {
+	Context("creating Account instance fails", func() {
 		BeforeEach(func() {
-			model.NewAcc = func(name, pwd string) (*model.Account, error) {
+			model.NewAcc = func(name, pwd string) (model.AccSender, error) {
 				return nil, errors.New("mock error")
 			}
 		})
 		It("returns and error response", func() {
 			Expect(w.Code).To(Equal(500))
 			Expect(w.Body.String()).To(ContainSubstring("mock error"))
+		})
+	})
+	Context("Account method SendToKafka fails", func() {
+		BeforeEach(func() {
+			mAcc.SendToKafkaCall.Returns.Err = errors.New("mock error")
+		})
+		It("returns and err response", func() {
+			Expect(w.Body.String()).To(ContainSubstring("mock error"))
+			Expect(w.Code).To(Equal(500))
 		})
 	})
 })
