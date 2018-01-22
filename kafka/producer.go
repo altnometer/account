@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -10,14 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/altnometer/account/model"
-
 	"github.com/Shopify/sarama"
 )
 
 // ISyncProducer interacts with kafka brokers as a producer.
 type ISyncProducer interface {
-	SendAccMsg(*model.Account) error
+	SendAccMsg(key, val string) error
 }
 
 // SyncProducer implement ISyncProducer interface.
@@ -85,24 +82,15 @@ func (p *SyncProducer) initMySyncProducer() error {
 }
 
 // SendAccMsg sends kafka message.
-func (p *SyncProducer) SendAccMsg(acc *model.Account) error {
-	accBytes, err := json.Marshal(&acc)
-
-	if err != nil {
-		return err
-	}
+func (p *SyncProducer) SendAccMsg(key, val string) error {
 	msgLog := sarama.ProducerMessage{
 		Topic:     topic,
-		Key:       sarama.StringEncoder(acc.ID),
+		Key:       sarama.StringEncoder(key),
 		Timestamp: time.Now(),
-		Value:     sarama.ByteEncoder(accBytes),
+		Value:     sarama.StringEncoder(val),
 	}
-	// partition, offset, err := kafka.SendMessage(&msgLog)
-	_, _, err = p.Producer.SendMessage(&msgLog)
-	if err != nil {
+	if _, _, err := p.Producer.SendMessage(&msgLog); err != nil {
 		return err
 	}
-	// fmt.Printf("Message is stored in partition %d, offset %d\n",
-	// partition, offset)
 	return nil
 }
