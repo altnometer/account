@@ -89,7 +89,7 @@ var _ = Describe("Register", func() {
 	})
 	Context("Account method SendToKafka fails", func() {
 		BeforeEach(func() {
-			mAcc.SendToKafkaCall.Returns.Err = errors.New("mock error")
+			mAcc.SendToKafkaCall.Returns.Error = errors.New("mock error")
 		})
 		It("returns and err response", func() {
 			Expect(w.Body.String()).To(ContainSubstring("mock error"))
