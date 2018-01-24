@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Kafka", func() {
+var _ = Describe("Kafka SyncProducer", func() {
 	Describe("InitMySyncProducer", func() {
 		var (
 			brokersEnvVar string
