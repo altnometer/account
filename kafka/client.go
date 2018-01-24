@@ -12,6 +12,7 @@ func newKafkaConf() *sarama.Config {
 	conf := sarama.NewConfig()
 	conf.Producer.RequiredAcks = sarama.WaitForAll
 	conf.Producer.Return.Successes = true
+	conf.Producer.Partitioner = sarama.NewRandomPartitioner
 	// do not compress short strings.
 	// conf.Producer.Compression = sarama.CompressionLZ4
 	conf.Producer.Compression = sarama.CompressionGZIP
