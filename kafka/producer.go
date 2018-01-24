@@ -57,12 +57,6 @@ func (p *SyncProducer) initMySyncProducer() error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err := p.Producer.Close(); err != nil {
-			fmt.Printf("Failed closing kafka producer with err: %s\n", err)
-			panic("Error closing kafka producer, err: " + err.Error())
-		}
-	}()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, os.Kill)
