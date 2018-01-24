@@ -17,7 +17,6 @@ func StartWebServer(port string) {
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
-	svr.ListenAndServe()
 	err := svr.ListenAndServe()
 	if err != nil {
 		fmt.Printf("HTTP server failed, port %s, err: %s\n", port, err.Error())
