@@ -27,6 +27,12 @@ var routes = Routes{
 	// 	GetAccount,
 	// },
 	Route{
+		"RegisterAccount",
+		"POST",
+		"/register",
+		&handlers.Register{StatusCode: 302, RedirectURL: "/"},
+	},
+	Route{
 		"HealthCheck",
 		"GET",
 		"/healthz",
