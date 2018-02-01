@@ -2,12 +2,29 @@ package model
 
 import "sync"
 
+// NameSetHandler handls operations with user name set.
+type NameSetHandler interface {
+	IsInSet(name string) bool
+	AddToSet(name string)
+}
+
+var nameSet *uNameSet
+var onceNameSet sync.Once
+
+// GetNamesSet returns a uNameSet instance
+var GetNamesSet = func() NameSetHandler {
+	onceNameSet.Do(func() {
+		nameSet = &uNameSet{m: make(map[string]struct{})}
+	})
+	return nameSet
+}
+
 type uNameSet struct {
 	sync.RWMutex
 	m map[string]struct{}
 }
 
-func (ns *uNameSet) isInSet(name string) bool {
+func (ns *uNameSet) IsInSet(name string) bool {
 	ns.RLock()
 	defer ns.RUnlock()
 	if _, ok := ns.m[name]; !ok {
@@ -16,15 +33,8 @@ func (ns *uNameSet) isInSet(name string) bool {
 	return true
 }
 
-func (ns *uNameSet) addToSet(name string) {
+func (ns *uNameSet) AddToSet(name string) {
 	ns.Lock()
 	defer ns.Unlock()
 	ns.m[name] = struct{}{}
-}
-
-var uNames = uNameSet{m: make(map[string]struct{})}
-
-// NameIsInSet  incapsulates duplicate name checking api.
-var NameIsInSet = func(name string) bool {
-	return uNames.isInSet(name)
 }
