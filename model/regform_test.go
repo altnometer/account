@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/altnometer/account/mocks"
 	"github.com/altnometer/account/model"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,16 +16,16 @@ var _ = Describe("FormOKer", func() {
 	var (
 		f                  model.RegForm
 		name, pwd, pwdConf string
-		NameIsInSetB4      func(name string) bool
+		GetNamesSetB4      func() model.NameSetHandler
 	)
 	BeforeEach(func() {
 		name = "unameЯйцоЖЭ"
 		pwd = "ka88dk#яфэюж"
 		pwdConf = "ka88dk#яфэюж"
-		NameIsInSetB4 = model.NameIsInSet
+		GetNamesSetB4 = model.GetNamesSet
 	})
 	AfterEach(func() {
-		model.NameIsInSet = NameIsInSetB4
+		model.GetNamesSet = GetNamesSetB4
 	})
 
 	JustBeforeEach(func() {
@@ -114,8 +115,10 @@ var _ = Describe("FormOKer", func() {
 	})
 	Context("when username already exists", func() {
 		BeforeEach(func() {
-			model.NameIsInSet = func(string) bool {
-				return true
+			model.GetNamesSet = func() model.NameSetHandler {
+				m := mocks.UNameSet{}
+				m.IsInSetCall.Returns.Bool = true
+				return &m
 			}
 		})
 		It("returns 400 code and error", func() {

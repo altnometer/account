@@ -55,7 +55,7 @@ func (f *RegForm) OK() (int, error) {
 	if code, err := checkNewLineChars(f.Name); err != nil {
 		return code, err
 	}
-	if NameIsInSet(f.Name) {
+	if GetNamesSet().IsInSet(f.Name) {
 		return 400, errors.New("NAME_ALREADY_EXISTS")
 	}
 
