@@ -15,16 +15,16 @@ var _ = Describe("FormOKer", func() {
 	var (
 		f                  model.RegForm
 		name, pwd, pwdConf string
-		uNameExistsBefore  func(name string) bool
+		NameIsInSetB4      func(name string) bool
 	)
 	BeforeEach(func() {
 		name = "unameЯйцоЖЭ"
 		pwd = "ka88dk#яфэюж"
 		pwdConf = "ka88dk#яфэюж"
-		uNameExistsBefore = model.UNameExists
+		NameIsInSetB4 = model.NameIsInSet
 	})
 	AfterEach(func() {
-		model.UNameExists = uNameExistsBefore
+		model.NameIsInSet = NameIsInSetB4
 	})
 
 	JustBeforeEach(func() {
@@ -114,7 +114,7 @@ var _ = Describe("FormOKer", func() {
 	})
 	Context("when username already exists", func() {
 		BeforeEach(func() {
-			model.UNameExists = func(string) bool {
+			model.NameIsInSet = func(string) bool {
 				return true
 			}
 		})

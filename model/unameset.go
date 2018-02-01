@@ -24,7 +24,7 @@ func (ns *uNameSet) addToSet(name string) {
 
 var uNames = uNameSet{m: make(map[string]struct{})}
 
-// UNameExists  incapsulates duplicate name checking api.
-var UNameExists = func(name string) bool {
+// NameIsInSet  incapsulates duplicate name checking api.
+var NameIsInSet = func(name string) bool {
 	return uNames.isInSet(name)
 }
