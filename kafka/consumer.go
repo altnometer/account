@@ -29,8 +29,8 @@ var accConsr *Consumer
 
 var onceInitCons sync.Once
 
-// NewConsumer returns a pointer to an initialized instance of Consumer.
-var NewConsumer = func() IConsumer {
+// GetConsumer returns a pointer to an initialized instance of Consumer.
+var GetConsumer = func() IConsumer {
 	onceInitCons.Do(func() {
 		accConsr = &Consumer{}
 		if err := accConsr.initMyConsumer(); err != nil {

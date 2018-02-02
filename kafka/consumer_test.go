@@ -110,7 +110,7 @@ var _ = Describe("Kafka Consumer", func() {
 				Expect(r).NotTo(BeNil())
 				Expect(r).Should(ContainSubstring("NO_KAFKA_BROKERS_ARG_IN_ENV"))
 			}()
-			_ = kafka.NewConsumer()
+			_ = kafka.GetConsumer()
 		})
 	})
 })
