@@ -1,6 +1,9 @@
 package model
 
-import "sync"
+import (
+	"encoding/json"
+	"sync"
+)
 
 // NameSetHandler handls operations with user name set.
 type NameSetHandler interface {
@@ -37,4 +40,15 @@ func (ns *uNameSet) AddToSet(name string) {
 	ns.Lock()
 	defer ns.Unlock()
 	ns.m[name] = struct{}{}
+}
+
+// AddKafkaMsgToNameSet adds and entry to the user name set.
+func AddKafkaMsgToNameSet(key, val []byte) error {
+	acc := Account{}
+	if err := json.Unmarshal(val, &acc); err != nil {
+		return err
+
+	}
+	GetNamesSet().AddToSet(acc.Name)
+	return nil
 }
