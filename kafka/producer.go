@@ -1,11 +1,9 @@
 package kafka
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"time"
 
@@ -39,22 +37,13 @@ var NewSyncProducer = func() ISyncProducer {
 	return SP
 }
 
-func (p *SyncProducer) getBrokers() error {
-	brokersStr := os.Getenv("KAFKA_BROKERS")
-	if len(brokersStr) == 0 {
-		return errors.New("NO_KAFKA_BROKERS_ARG_IN_ENV")
-	}
-	p.Brokers = strings.Split(brokersStr, ",")
-	return nil
-}
-
 func (p *SyncProducer) initMySyncProducer() error {
-	if err := p.getBrokers(); err != nil {
+	var err error
+	if p.Brokers, err = getBrokers(); err != nil {
 		return err
 	}
-	var err error
-	p.Producer, err = sarama.NewSyncProducer(p.Brokers, newKafkaConf())
-	if err != nil {
+	if p.Producer, err = sarama.NewSyncProducer(
+		p.Brokers, newKafkaConf()); err != nil {
 		return err
 	}
 	c := make(chan os.Signal, 1)
