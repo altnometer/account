@@ -40,15 +40,6 @@ var GetConsumer = func() IConsumer {
 	return accConsr
 }
 
-func (c *Consumer) getBrokers() error {
-	brokersStr := os.Getenv("KAFKA_BROKERS")
-	if len(brokersStr) == 0 {
-		return errors.New("NO_KAFKA_BROKERS_ARG_IN_ENV")
-	}
-	c.brokers = strings.Split(brokersStr, ",")
-	return nil
-}
-
 func (c *Consumer) initMyConsumer() error {
 	if err := c.getBrokers(); err != nil {
 		return err
