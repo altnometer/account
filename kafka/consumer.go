@@ -40,6 +40,7 @@ var GetConsumer = func() *AccConsumer {
 }
 
 // ConsumeAccMsgs receive and handle kafka account messages.
+// This fn blocks execution.
 func ConsumeAccMsgs(handler msgHandler) error {
 	c := GetConsumer()
 	var err error
@@ -78,6 +79,7 @@ func ConsumeAccMsgs(handler msgHandler) error {
 				}
 			}(pc)
 			go func(pc sarama.PartitionConsumer) {
+				fmt.Printf("reading kafka topic %s, partion %v\n", topic, p)
 				for msg := range pc.Messages() {
 					if err := handler(msg.Key, msg.Value); err != nil {
 						errChan <- fmt.Errorf("msg handler failed for topic %s, "+
