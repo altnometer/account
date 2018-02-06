@@ -1,6 +1,9 @@
 package kafka
 
 import (
+	"errors"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -41,4 +44,11 @@ func newKafkaConf() *sarama.Config {
 	// conf.Consumer.Fetch.Min = 1 // default 1 bytes
 
 	return conf
+}
+func getBrokers() ([]string, error) {
+	brokersStr := os.Getenv("KAFKA_BROKERS")
+	if len(brokersStr) == 0 {
+		return nil, errors.New("NO_KAFKA_BROKERS_ARG_IN_ENV")
+	}
+	return strings.Split(brokersStr, ","), nil
 }
