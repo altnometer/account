@@ -79,7 +79,7 @@ func ConsumeAccMsgs(handler msgHandler) error {
 				}
 			}(pc)
 			go func(pc sarama.PartitionConsumer) {
-				fmt.Printf("reading kafka topic %s, partion %v\n", topic, p)
+				// fmt.Printf("reading kafka topic %s, partion %v\n", topic, p)
 				for msg := range pc.Messages() {
 					if err := handler(msg.Key, msg.Value); err != nil {
 						errChan <- fmt.Errorf("msg handler failed for topic %s, "+
@@ -91,8 +91,8 @@ func ConsumeAccMsgs(handler msgHandler) error {
 			go func(pc sarama.PartitionConsumer) {
 				defer wg.Done()
 				<-done
-				fmt.Printf("Closing partitionConsumer, topic: %s, "+
-					"partition: %v\n", topic, p)
+				// fmt.Printf("Closing partitionConsumer, topic: %s, "+
+				// 	"partition: %v\n", topic, p)
 				pc.AsyncClose()
 				// if err := pc.Close(); err != nil {
 				// 	fmt.Printf("Failed closing topic: %s, partion %v, "+
@@ -119,7 +119,7 @@ func ConsumeAccMsgs(handler msgHandler) error {
 			fmt.Printf("Failed closing kafka Consumer with err: %s\n", err)
 			panic("Failed closing kafka Consumer, err: " + err.Error())
 		}
-		fmt.Println("kafka Consumer is closed after os.signal")
+		// fmt.Println("kafka Consumer is closed after os.signal")
 		os.Exit(0)
 	case err := <-withErr:
 		return err
