@@ -84,13 +84,13 @@ func (pc *MockPartitionConsumer) HighWaterMarkOffset() int64 {
 }
 
 func (pc *MockPartitionConsumer) Messages() <-chan *sarama.ConsumerMessage {
-	return pc.MessagesCall.Return.MsgsChan
+	return (<-chan *sarama.ConsumerMessage)(pc.MessagesCall.Return.MsgsChan)
 }
 func (pc *MockPartitionConsumer) Errors() <-chan *sarama.ConsumerError {
 	return nil
 }
 
-var _ = Describe("Kafka Consumer", func() {
+var _ = Describe("Kafka AccConsumer", func() {
 	var (
 		brokersEnvVar string
 	)
@@ -111,19 +111,21 @@ var _ = Describe("Kafka Consumer", func() {
 				Expect(r).Should(ContainSubstring("NO_KAFKA_BROKERS_ARG_IN_ENV"))
 			}()
 			_ = kafka.GetConsumer()
+			// ConsumeAccMsgs
 		})
 	})
 })
 
-var _ = Describe("ConsumeMsgs", func() {
+var _ = Describe("ConsumeAccMsgs", func() {
 	var (
 		mc  MockConsumer
 		mpc MockPartitionConsumer
 
 		msgChan chan *sarama.ConsumerMessage
 
-		myConsr    kafka.Consumer
-		msgHandler func(key, val []byte) error
+		myConsr       kafka.AccConsumer
+		msgHandler    func(key, val []byte) error
+		GetConsumerB4 func() *kafka.AccConsumer
 	)
 	BeforeEach(func() {
 		mpc = MockPartitionConsumer{}
@@ -135,17 +137,20 @@ var _ = Describe("ConsumeMsgs", func() {
 		mc.PartitionsCall.Return.PartitionList = []int32{1, 2}
 		mc.ConsumePartitionCall.Return.PartitionConsumer = sarama.PartitionConsumer(&mpc)
 
-		myConsr = kafka.Consumer{}
+		myConsr = kafka.AccConsumer{}
 		myConsr.Consr = &mc
-		myConsr.Done = make(chan bool, 1)
+		myConsr.DoneTesting = make(chan bool, 1)
 		msgHandler = func(key, val []byte) error {
 			return nil
+		}
+		GetConsumerB4 = kafka.GetConsumer
+		kafka.GetConsumer = func() *kafka.AccConsumer {
+			return &myConsr
 		}
 
 	})
 	AfterEach(func() {
-		close(msgChan)
-		close(myConsr.Done)
+		kafka.GetConsumer = GetConsumerB4
 	})
 	JustBeforeEach(func() {
 	})
@@ -155,7 +160,7 @@ var _ = Describe("ConsumeMsgs", func() {
 			mc.PartitionsCall.Return.PartitionList = nil
 		})
 		It("returns an error", func() {
-			err := myConsr.ConsumeMsgs(msgHandler)
+			err := kafka.ConsumeAccMsgs(msgHandler)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("failed to get partitions"))
 		})
@@ -166,9 +171,27 @@ var _ = Describe("ConsumeMsgs", func() {
 			mc.ConsumePartitionCall.Return.Error = errors.New("mock error")
 		})
 		It("returns an error", func() {
-			err := myConsr.ConsumeMsgs(msgHandler)
+			err := kafka.ConsumeAccMsgs(msgHandler)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("ConsumePartition() failed"))
+		})
+	})
+	Context("msg handler returns an error", func() {
+		JustBeforeEach(func() {
+			msgHandler = func(key, val []byte) error {
+				return errors.New("mock error")
+			}
+		})
+		It("returns a correct error", func() {
+			go func(mc chan *sarama.ConsumerMessage) {
+				msg := sarama.ConsumerMessage{
+					Key: []byte("key1"), Value: []byte("val1")}
+				mc <- &msg
+			}(msgChan)
+			err := kafka.ConsumeAccMsgs(msgHandler)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("msg handler failed for topic"))
+
 		})
 	})
 	Context("receives a msg", func() {
@@ -191,31 +214,13 @@ var _ = Describe("ConsumeMsgs", func() {
 					Key: []byte(msgKeySend), Value: []byte(msgValSend)}
 				mc <- &msg
 				time.Sleep(time.Duration(10 * time.Millisecond))
-				myConsr.Done <- true
+				myConsr.DoneTesting <- true
 			}(msgChan)
 
-			err := myConsr.ConsumeMsgs(msgHandler)
+			err := kafka.ConsumeAccMsgs(msgHandler)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(msgKeyRecieved)).To(Equal(msgKeySend))
 			Expect(string(msgValRecieved)).To(Equal(msgValSend))
-
-		})
-	})
-	Context("msg handler returns an error", func() {
-		JustBeforeEach(func() {
-			msgHandler = func(key, val []byte) error {
-				return errors.New("mock error")
-			}
-		})
-		It("returns a correct error", func() {
-			go func(mc chan *sarama.ConsumerMessage) {
-				msg := sarama.ConsumerMessage{
-					Key: []byte("key1"), Value: []byte("val1")}
-				mc <- &msg
-			}(msgChan)
-			err := myConsr.ConsumeMsgs(msgHandler)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("handler(msg) failed"))
 
 		})
 	})
