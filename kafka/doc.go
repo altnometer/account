@@ -4,7 +4,9 @@
 //
 // A kafka consumer usage.
 //
-// Get the consumer instance with kafka.GetConsumer().
-// Call kafka.GetConsumer().ConsumeMsgs(handler msgHandler)
+// Call
+// err := ConsumeAccMsgs(handler msgHandler)
 // where msgHandler type is func(key, val []byte) error.
+// ConsumeAccMsgs() blocks execution. Execute from a goroutine if required.
+//
 package kafka
