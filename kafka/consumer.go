@@ -41,7 +41,8 @@ var GetConsumer = func() *AccConsumer {
 
 // ConsumeAccMsgs receive and handle kafka account messages.
 // This fn blocks execution.
-func ConsumeAccMsgs(handler msgHandler) error {
+// func ConsumeAccMsgs(handler msgHandler) error {
+func ConsumeAccMsgs(msgChan chan<- []byte) error {
 	c := GetConsumer()
 	var err error
 	partitionList, err := c.Consr.Partitions(topic)
@@ -54,8 +55,6 @@ func ConsumeAccMsgs(handler msgHandler) error {
 
 	done := make(chan struct{}, 1)
 	completed := make(chan struct{}, 1)
-	withErr := make(chan error, 1)
-	errChan := make(chan error, 1)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt)
 	signal.Notify(ch, os.Kill)
@@ -64,10 +63,8 @@ func ConsumeAccMsgs(handler msgHandler) error {
 		pc, err := c.Consr.ConsumePartition(
 			topic, p, sarama.OffsetOldest)
 		if err != nil {
-			go func() {
-				errChan <- fmt.Errorf("ConsumePartition() failed, topic %s, "+
-					"partition %v, err: %s", topic, p, err)
-			}()
+			return fmt.Errorf("ConsumePartition() failed, topic %s, "+
+				"partition %v, err: %s", topic, p, err)
 		}
 		if pc != nil {
 			wg.Add(1)
@@ -79,13 +76,8 @@ func ConsumeAccMsgs(handler msgHandler) error {
 				}
 			}(pc)
 			go func(pc sarama.PartitionConsumer) {
-				// fmt.Printf("reading kafka topic %s, partion %v\n", topic, p)
 				for msg := range pc.Messages() {
-					if err := handler(msg.Key, msg.Value); err != nil {
-						errChan <- fmt.Errorf("msg handler failed for topic %s, "+
-							"partition: %v, offset: %v, err: %s\n",
-							msg.Topic, msg.Partition, msg.Offset, err)
-					}
+					msgChan <- msg.Value
 				}
 			}(pc)
 			go func(pc sarama.PartitionConsumer) {
@@ -107,9 +99,6 @@ func ConsumeAccMsgs(handler msgHandler) error {
 			close(done)
 			wg.Wait()
 			close(completed)
-		case err := <-errChan:
-			close(done)
-			withErr <- err
 		}
 	}()
 	select {
@@ -120,13 +109,6 @@ func ConsumeAccMsgs(handler msgHandler) error {
 		}
 		fmt.Println("kafka Consumer is closed after os.signal")
 		os.Exit(0)
-	case err := <-withErr:
-		if err := c.Consr.Close(); err != nil {
-			fmt.Printf("Failed closing kafka Consumer with err: %s\n", err)
-			panic("Failed closing kafka Consumer, err: " + err.Error())
-		}
-		fmt.Println("kafka Consumer is closed after err")
-		return err
 	case <-c.DoneTesting: // no need to close mock consumers.
 		return nil
 	}
