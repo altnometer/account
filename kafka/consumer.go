@@ -52,8 +52,8 @@ func ConsumeAccMsgs(handler msgHandler) error {
 
 	var wg sync.WaitGroup
 
-	done := make(chan interface{}, 1)
-	completed := make(chan interface{}, 1)
+	done := make(chan struct{}, 1)
+	completed := make(chan struct{}, 1)
 	withErr := make(chan error, 1)
 	errChan := make(chan error, 1)
 	ch := make(chan os.Signal, 1)
