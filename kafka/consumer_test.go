@@ -122,15 +122,16 @@ var _ = Describe("ConsumeAccMsgs", func() {
 		mpc MockPartitionConsumer
 
 		msgChan chan *sarama.ConsumerMessage
+		valChan chan []byte
 
 		myConsr       kafka.AccConsumer
-		msgHandler    func(key, val []byte) error
 		GetConsumerB4 func() *kafka.AccConsumer
 	)
 	BeforeEach(func() {
 		mpc = MockPartitionConsumer{}
 		msgChan = make(chan *sarama.ConsumerMessage, 1)
 		mpc.MessagesCall.Return.MsgsChan = msgChan
+		valChan = make(chan []byte, 1)
 
 		mc = MockConsumer{}
 		mc.PartitionsCall.Return.Error = nil
@@ -140,9 +141,6 @@ var _ = Describe("ConsumeAccMsgs", func() {
 		myConsr = kafka.AccConsumer{}
 		myConsr.Consr = &mc
 		myConsr.DoneTesting = make(chan bool, 1)
-		msgHandler = func(key, val []byte) error {
-			return nil
-		}
 		GetConsumerB4 = kafka.GetConsumer
 		kafka.GetConsumer = func() *kafka.AccConsumer {
 			return &myConsr
@@ -160,7 +158,7 @@ var _ = Describe("ConsumeAccMsgs", func() {
 			mc.PartitionsCall.Return.PartitionList = nil
 		})
 		It("returns an error", func() {
-			err := kafka.ConsumeAccMsgs(msgHandler)
+			err := kafka.ConsumeAccMsgs(valChan)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("failed to get partitions"))
 		})
@@ -171,55 +169,26 @@ var _ = Describe("ConsumeAccMsgs", func() {
 			mc.ConsumePartitionCall.Return.Error = errors.New("mock error")
 		})
 		It("returns an error", func() {
-			err := kafka.ConsumeAccMsgs(msgHandler)
+			err := kafka.ConsumeAccMsgs(valChan)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("ConsumePartition() failed"))
-		})
-	})
-	Context("msg handler returns an error", func() {
-		JustBeforeEach(func() {
-			msgHandler = func(key, val []byte) error {
-				return errors.New("mock error")
-			}
-		})
-		It("returns a correct error", func() {
-			go func(mc chan *sarama.ConsumerMessage) {
-				msg := sarama.ConsumerMessage{
-					Key: []byte("key1"), Value: []byte("val1")}
-				mc <- &msg
-			}(msgChan)
-			err := kafka.ConsumeAccMsgs(msgHandler)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("msg handler failed for topic"))
-
 		})
 	})
 	Context("receives a msg", func() {
 		msgKeySend := "key1"
 		msgValSend := "val1"
-		var msgKeyRecieved []byte
-		var msgValRecieved []byte
-		JustBeforeEach(func() {
-			msgHandler = func(key, val []byte) error {
-				msgKeyRecieved = key
-				msgValRecieved = val
-
-				// return errors.New("mock error")
-				return nil
-			}
-		})
-		It("msgHandler() is called with correct args", func() {
+		It("passes msg to the given channel", func() {
 			go func(mc chan *sarama.ConsumerMessage) {
 				msg := sarama.ConsumerMessage{
 					Key: []byte(msgKeySend), Value: []byte(msgValSend)}
 				mc <- &msg
+				err := kafka.ConsumeAccMsgs(valChan)
+				Expect(err).NotTo(HaveOccurred())
+
 				time.Sleep(time.Duration(10 * time.Millisecond))
 				myConsr.DoneTesting <- true
 			}(msgChan)
-
-			err := kafka.ConsumeAccMsgs(msgHandler)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(msgKeyRecieved)).To(Equal(msgKeySend))
+			msgValRecieved := <-valChan
 			Expect(string(msgValRecieved)).To(Equal(msgValSend))
 
 		})
