@@ -43,7 +43,7 @@ func (ns *uNameSet) AddToSet(name string) {
 }
 
 // AddKafkaMsgToNameSet adds and entry to the user name set.
-func AddKafkaMsgToNameSet(key, val []byte) error {
+func AddKafkaMsgToNameSet(val []byte) error {
 	acc := Account{}
 	if err := json.Unmarshal(val, &acc); err != nil {
 		return err

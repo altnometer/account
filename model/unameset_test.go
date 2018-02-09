@@ -40,12 +40,12 @@ var _ = Describe("AddKafkaMsgToNameSet", func() {
 	Context("when json decoding fails", func() {
 		It("returns an error", func() {
 			accBytes = []byte("")
-			err := model.AddKafkaMsgToNameSet([]byte(name), accBytes)
+			err := model.AddKafkaMsgToNameSet(accBytes)
 			Expect(err).To(HaveOccurred())
 		})
 	})
 	It("calls meth AddToSet", func() {
-		err := model.AddKafkaMsgToNameSet([]byte(name), accBytes)
+		err := model.AddKafkaMsgToNameSet(accBytes)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ms.AddToSetCall.Receives.Name).To(Equal(name))
 	})
