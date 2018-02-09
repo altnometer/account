@@ -14,8 +14,8 @@ type NameSetHandler interface {
 var nameSet *uNameSet
 var onceNameSet sync.Once
 
-// GetNamesSet returns a uNameSet instance
-var GetNamesSet = func() NameSetHandler {
+// GetNameSet returns a uNameSet instance
+var GetNameSet = func() NameSetHandler {
 	onceNameSet.Do(func() {
 		nameSet = &uNameSet{m: make(map[string]struct{})}
 	})
@@ -49,6 +49,6 @@ func AddKafkaMsgToNameSet(val []byte) error {
 		return err
 
 	}
-	GetNamesSet().AddToSet(acc.Name)
+	GetNameSet().AddToSet(acc.Name)
 	return nil
 }

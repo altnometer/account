@@ -16,16 +16,16 @@ var _ = Describe("FormOKer", func() {
 	var (
 		f                  model.RegForm
 		name, pwd, pwdConf string
-		GetNamesSetB4      func() model.NameSetHandler
+		GetNameSetB4      func() model.NameSetHandler
 	)
 	BeforeEach(func() {
 		name = "unameЯйцоЖЭ"
 		pwd = "ka88dk#яфэюж"
 		pwdConf = "ka88dk#яфэюж"
-		GetNamesSetB4 = model.GetNamesSet
+		GetNameSetB4 = model.GetNameSet
 	})
 	AfterEach(func() {
-		model.GetNamesSet = GetNamesSetB4
+		model.GetNameSet = GetNameSetB4
 	})
 
 	JustBeforeEach(func() {
@@ -115,7 +115,7 @@ var _ = Describe("FormOKer", func() {
 	})
 	Context("when username already exists", func() {
 		BeforeEach(func() {
-			model.GetNamesSet = func() model.NameSetHandler {
+			model.GetNameSet = func() model.NameSetHandler {
 				m := mocks.UNameSet{}
 				m.IsInSetCall.Returns.Bool = true
 				return &m

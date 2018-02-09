@@ -17,23 +17,23 @@ var _ = Describe("AddKafkaMsgToNameSet", func() {
 
 		ms mocks.UNameSet
 
-		GetNamesSetB4 func() model.NameSetHandler
+		GetNameSetB4 func() model.NameSetHandler
 	)
 	BeforeEach(func() {
 		id = "1234"
 		name = "unameЯйцоЖЭ"
 		pwd = "ka88dk#яфэюж"
 		acc = model.Account{ID: id, Name: name, PwdHash: pwd}
-		GetNamesSetB4 = model.GetNamesSet
+		GetNameSetB4 = model.GetNameSet
 		ms = mocks.UNameSet{}
 
 	})
 	AfterEach(func() {
 		accBytes, _ = json.Marshal(acc)
-		model.GetNamesSet = GetNamesSetB4
+		model.GetNameSet = GetNameSetB4
 	})
 	JustBeforeEach(func() {
-		model.GetNamesSet = func() model.NameSetHandler {
+		model.GetNameSet = func() model.NameSetHandler {
 			return &ms
 		}
 	})
