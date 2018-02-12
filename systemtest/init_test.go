@@ -2,6 +2,7 @@ package system_test
 
 import (
 	"net"
+	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -15,19 +16,51 @@ const port = "8089"
 const serverAddress = "127.0.0.1:" + port
 
 // const brokersEnvVar = "127.0.0.1:9092,127.0.0.1:9092"
-// os.Setenv("KAFKA_BROKERS", brokersEnvVar)
+const brokersEnvVar = "127.0.0.1:9092"
 
 var pathToServerBinary string
 var serverSession *gexec.Session
 
 var _ = BeforeSuite(func() {
+	os.Setenv("KAFKA_BROKERS", brokersEnvVar)
 	var err error
 	pathToServerBinary, err = gexec.Build("github.com/altnometer/account/cmd/account")
 	Expect(err).NotTo(HaveOccurred())
+	// dockKafkaArgs := []string{
+	// 	"docker",
+	// 	"run",
+	// 	"--rm",
+	// 	// "-it",
+	// 	"-d",
+	// 	"--name", "kafkadocker",
+	// 	"-p", "2181:2181",
+	// 	"-p", "3030:3030",
+	// 	"-p", "8081:8081",
+	// 	"-p", "8082:8082",
+	// 	"-p", "8083:8083",
+	// 	"-p", "9092:9092",
+	// 	"-e", "ADV_HOST=127.0.0.1",
+	// 	"landoop/fast-data-dev",
+	// }
+	// runKafka := exec.Command(dockKafkaArgs[0], dockKafkaArgs[1:]...)
+	// runKafka.Stdout = GinkgoWriter
+	// runKafka.Stderr = GinkgoWriter
+	// err = runKafka.Run()
+	// Expect(err).NotTo(HaveOccurred())
+	// time.Sleep(time.Duration(30 * time.Second))
 })
 
 var _ = AfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
+	// this does not work: returns an error.
+	// dockKafkaArgs := []string{
+	// 	"docker",
+	// 	"stop",
+	// 	"--name", "kafkadocker",
+	// }
+	// stopKafka := exec.Command(dockKafkaArgs[0], dockKafkaArgs[1:]...)
+	// _ = stopKafka.Run()
+	// Expect(err).NotTo(HaveOccurred())
 })
 
 func verifyServerIsListening() error {
