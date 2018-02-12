@@ -3,8 +3,12 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"os"
+	"syscall"
 
+	"github.com/altnometer/account/kafka"
+	"github.com/altnometer/account/model"
 	"github.com/altnometer/account/service"
 	"github.com/altnometer/kafkalog"
 )
@@ -13,6 +17,7 @@ func main() {
 	port := flag.String("port", "8080", "server port")
 	env := flag.String("env", "dev", "environment, accepted values: dev, prod")
 	flag.Parse()
+	// redirect Stdout to a kafka stream.
 	if *env == "prod" {
 		old := os.Stdout
 		r, w, err := os.Pipe()
@@ -35,6 +40,22 @@ func main() {
 		}()
 
 	}
+	accChan := make(chan []byte, 256)
+	go func() {
+		if err := kafka.ConsumeAccMsgs(accChan); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}()
+	go func() {
+		for msg := range accChan {
+			if err := model.AddKafkaMsgToNameSet(msg); err != nil {
+				fmt.Printf("Error handling received kafka msg: %s\n", err)
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			}
+		}
+	}()
+	fmt.Println("\n***********************************")
 	service.StartWebServer(*port)
 	// reader := bufio.NewReader(os.Stdin)
 	// kp := kafka.SyncProducer{}
